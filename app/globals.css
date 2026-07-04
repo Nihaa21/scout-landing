@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/* ── Scout design tokens ─────────────────────────────────────────────
+   Warm paper + near-black ink + ONE muted blue accent.
+   No gradients, no shadows, no neon. Two weights (400/500).           */
+@theme {
+  --color-paper: #faf9f6;
+  --color-ink: #1b1a17;
+  --color-ink-soft: #6f6c66;
+  --color-ink-faint: #a8a49c;
+  --color-hairline: rgba(27, 26, 23, 0.18);
+  --color-accent: #185fa5;
+  --color-accent-bright: #378add;
+  --color-pos: #3d8b57;
+  --color-mid: #c28a1f;
+  --color-neg: #b4372f;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  --font-serif: Georgia, "Times New Roman", serif;
+
+  --radius-card: 12px;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hairline borders — true 0.5px on retina */
+.hairline {
+  border: 0.5px solid var(--color-hairline);
+}
+.hairline-b {
+  border-bottom: 0.5px solid var(--color-hairline);
+}
+.hairline-t {
+  border-top: 0.5px solid var(--color-hairline);
+}
+.hairline-l {
+  border-left: 0.5px solid var(--color-hairline);
+}
+
+/* Reveal — subtle rise + fade, staggered via --d */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.55s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+/* Scouting status — a slow breathe, not a flash */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.breathe {
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+/* gap → ask reveal: strip default disclosure marker */
+details.gapask > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.gapask > summary::-webkit-details-marker {
+  display: none;
+}
