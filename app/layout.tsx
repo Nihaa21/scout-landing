@@ -15,9 +15,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    "https://scout-landing-nihaghali554-1940-nihaghali554-1940s-projects.vercel.app",
+  ),
   title: "scout — 0→1 product research",
   description:
     "Research what the market thinks — before you build it. Scout reads public feedback, finds the themes, and hands you the brief.",
+  openGraph: {
+    title: "scout — 0→1 product research",
+    description:
+      "Research what the market thinks — before you build it. Scout reads public feedback, finds the themes, and hands you the brief.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
