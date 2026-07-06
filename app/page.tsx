@@ -13,6 +13,7 @@ const STAGE_LABEL: Record<string, string> = {
 
 export default function Home() {
   const [query, setQuery] = useState("Jobber");
+  const [mode, setMode] = useState<"product" | "industry">("product");
   const [brief, setBrief] = useState<Brief>(MOCK_BRIEF);
   const [phase, setPhase] = useState<Phase>("done");
   const [lit, setLit] = useState(MOCK_BRIEF.sources.length + 1); // all lit at rest
@@ -53,7 +54,7 @@ export default function Home() {
     try {
       // Drive the UI from real stream events. Labels lead the stage they START
       // (events fire on completion), so the status reflects what's happening now.
-      const final = await researchStream(query.trim(), (ev) => {
+      const final = await researchStream(query.trim(), mode, (ev) => {
         switch (ev.event) {
           case "routed":
             numSources = ev.sources.length;
@@ -118,18 +119,44 @@ export default function Home() {
 
           <form
             onSubmit={runScout}
-            className="mt-8 flex flex-col sm:flex-row gap-2.5 max-w-md"
+            className="mt-8 max-w-md"
           >
-            <label htmlFor="product" className="sr-only">
-              Product to research
+            {/* mode toggle: research a product, or an industry/space */}
+            <div
+              role="tablist"
+              aria-label="Research mode"
+              className="inline-flex hairline rounded-[10px] p-0.5 mb-2.5 font-mono text-[11px]"
+            >
+              {(["product", "industry"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => setMode(m)}
+                  className={`px-3 py-1 rounded-[8px] transition-colors ${
+                    mode === m
+                      ? "bg-accent text-paper"
+                      : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+            <label htmlFor="subject" className="sr-only">
+              {mode === "industry" ? "Industry to research" : "Product to research"}
             </label>
             <input
-              id="product"
-              name="product"
+              id="subject"
+              name="subject"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter a product…"
+              placeholder={
+                mode === "industry" ? "Enter an industry…" : "Enter a product…"
+              }
               autoComplete="off"
               className="hairline rounded-[12px] bg-transparent px-4 py-2.5 text-[14px] flex-1 placeholder:text-ink-faint focus:outline-none focus:border-accent"
             />
@@ -140,6 +167,7 @@ export default function Home() {
             >
               {phase === "scouting" ? "Scouting…" : "Run Scout"}
             </button>
+            </div>
           </form>
         </div>
 

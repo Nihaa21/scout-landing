@@ -104,7 +104,10 @@ export const MOCK_BRIEF: Brief = {
  *  "this takes a few minutes" state only when it's actually calling the agent. */
 export const IS_LIVE = Boolean(process.env.NEXT_PUBLIC_API_URL);
 
-export async function fetchBrief(product: string): Promise<Brief> {
+export async function fetchBrief(
+  product: string,
+  mode: "product" | "industry" = "product",
+): Promise<Brief> {
   const base = process.env.NEXT_PUBLIC_API_URL;
 
   // No backend configured → instant mock (great for a snappy demo).
@@ -112,12 +115,11 @@ export async function fetchBrief(product: string): Promise<Brief> {
     return { ...MOCK_BRIEF, product: product || MOCK_BRIEF.product };
   }
 
-  // Live: call the Scout agent. A real run takes ~2-5 min (2 Claude synthesis
-  // passes + Firecrawl competitive teardown), so there's no client timeout.
+  // Live: call the Scout agent (non-streaming JSON).
   const res = await fetch(`${base.replace(/\/$/, "")}/research`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ product }),
+    body: JSON.stringify({ product, mode }),
   });
   if (!res.ok) {
     throw new Error(`Scout API returned ${res.status}`);
@@ -159,6 +161,7 @@ export type ScoutEvent =
  */
 export async function researchStream(
   product: string,
+  mode: "product" | "industry",
   onEvent: (e: ScoutEvent) => void,
 ): Promise<Brief> {
   const base = process.env.NEXT_PUBLIC_API_URL;
@@ -184,7 +187,7 @@ export async function researchStream(
   const res = await fetch(`${base.replace(/\/$/, "")}/research`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-    body: JSON.stringify({ product }),
+    body: JSON.stringify({ product, mode }),
   });
   if (!res.ok || !res.body) {
     throw new Error(`Scout API returned ${res.status}`);
