@@ -124,14 +124,102 @@ export async function fetchBrief(product: string): Promise<Brief> {
   }
   const d = await res.json();
 
-  // Map the API payload to the Brief shape. Only rename: one_thing → oneThing;
-  // themes/teardown fields already line up 1:1.
+  return mapBrief(d, product);
+}
+
+/** Map the API payload to the Brief shape. Only rename: one_thing → oneThing;
+ *  themes/teardown fields already line up 1:1. */
+function mapBrief(d: Record<string, unknown>, product: string): Brief {
   return {
-    product: d.product ?? product,
-    signals: d.signals ?? 0,
-    sources: d.sources ?? [],
-    oneThing: d.one_thing ?? "",
-    themes: d.themes ?? [],
-    teardown: d.teardown ?? [],
+    product: (d.product as string) ?? product,
+    signals: (d.signals as number) ?? 0,
+    sources: (d.sources as string[]) ?? [],
+    oneThing: (d.one_thing as string) ?? "",
+    themes: (d.themes as Theme[]) ?? [],
+    teardown: (d.teardown as TeardownRow[]) ?? [],
   };
+}
+
+/** Progress events streamed by the agent while a run is in flight. */
+export type ScoutEvent =
+  | { event: "routed"; sources: string[] }
+  | { event: "source"; source: string; count: number; pool: number }
+  | { event: "synthesis"; themes_count: number }
+  | { event: "teardown"; count: number }
+  | { event: "cached" }
+  | { event: "error"; detail?: string }
+  | { event: "brief"; brief: Record<string, unknown> };
+
+/**
+ * Run a research request, calling `onEvent` as each stage completes so the UI can
+ * show partial progress. Resolves with the final Brief.
+ *
+ * Live: consumes the backend's SSE stream. Mock: simulates the same events with
+ * small delays so the animation still plays with no backend.
+ */
+export async function researchStream(
+  product: string,
+  onEvent: (e: ScoutEvent) => void,
+): Promise<Brief> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+
+  // ── Mock: replay a plausible event sequence, then return the mock brief. ──
+  if (!base) {
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    onEvent({ event: "routed", sources: MOCK_BRIEF.sources });
+    let pool = 0;
+    for (const s of MOCK_BRIEF.sources) {
+      await sleep(650);
+      pool += 30;
+      onEvent({ event: "source", source: s, count: 30, pool });
+    }
+    await sleep(650);
+    onEvent({ event: "synthesis", themes_count: MOCK_BRIEF.themes.length });
+    await sleep(500);
+    onEvent({ event: "teardown", count: MOCK_BRIEF.teardown.length });
+    return { ...MOCK_BRIEF, product: product || MOCK_BRIEF.product };
+  }
+
+  // ── Live: consume Server-Sent Events from POST /research. ──
+  const res = await fetch(`${base.replace(/\/$/, "")}/research`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+    body: JSON.stringify({ product }),
+  });
+  if (!res.ok || !res.body) {
+    throw new Error(`Scout API returned ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalBrief: Brief | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE frames are separated by a blank line.
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
+      if (!dataLine) continue;
+      const payload = dataLine.slice(5).trim();
+      if (!payload) continue;
+      let ev: ScoutEvent;
+      try {
+        ev = JSON.parse(payload);
+      } catch {
+        continue;
+      }
+      onEvent(ev);
+      if (ev.event === "error") throw new Error(ev.detail ?? "Scout run failed");
+      if (ev.event === "brief") finalBrief = mapBrief(ev.brief, product);
+    }
+  }
+
+  if (!finalBrief) throw new Error("No brief received from Scout");
+  return finalBrief;
 }

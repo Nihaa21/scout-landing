@@ -2,24 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 import LiveBrief, { type Phase } from "@/components/LiveBrief";
-import { MOCK_BRIEF, fetchBrief, IS_LIVE, type Brief } from "@/lib/brief";
+import { MOCK_BRIEF, researchStream, IS_LIVE, type Brief } from "@/lib/brief";
 
-const STEP_MS = 700; // per-source light-up
-const TEARDOWN_MS = 1100; // the teardown step takes a beat longer
+const STAGE_LABEL: Record<string, string> = {
+  routing: "routing sources…",
+  gathering: "reading sources…",
+  synthesizing: "finding the themes…",
+  teardown: "competitive teardown…",
+};
 
 export default function Home() {
   const [query, setQuery] = useState("Jobber");
   const [brief, setBrief] = useState<Brief>(MOCK_BRIEF);
   const [phase, setPhase] = useState<Phase>("done");
   const [lit, setLit] = useState(MOCK_BRIEF.sources.length + 1); // all lit at rest
+  const [srcRow, setSrcRow] = useState<string[]>(MOCK_BRIEF.sources);
+  const [signals, setSignals] = useState(0);
+  const [stage, setStage] = useState<string | undefined>();
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(
     () => () => {
-      timers.current.forEach(clearTimeout);
       if (ticker.current) clearInterval(ticker.current);
     },
     [],
@@ -27,35 +32,50 @@ export default function Home() {
 
   async function runScout(e: React.FormEvent) {
     e.preventDefault();
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
     if (ticker.current) clearInterval(ticker.current);
 
-    const steps = brief.sources.length; // sources, then teardown
     setPhase("scouting");
     setError(null);
     setLit(0);
+    setSignals(0);
     setElapsed(0);
+    setStage(STAGE_LABEL.routing);
+    setSrcRow(brief.sources); // shown until the router reports the real sources
 
-    // Animate the source row lighting up (visual pacing).
-    for (let i = 1; i <= steps; i++) {
-      timers.current.push(setTimeout(() => setLit(i), i * STEP_MS));
-    }
-    timers.current.push(
-      setTimeout(() => setLit(steps + 1), steps * STEP_MS + TEARDOWN_MS),
-    );
-
-    // Kick the real request off immediately (parallel with the animation), and
-    // count elapsed seconds so a multi-minute live run doesn't look frozen.
     const startedAt = Date.now();
     ticker.current = setInterval(
       () => setElapsed(Math.round((Date.now() - startedAt) / 1000)),
       1000,
     );
 
+    let gathered = 0;
+    let numSources = brief.sources.length;
     try {
-      const next = await fetchBrief(query.trim());
-      setBrief(next);
+      // Drive the UI from real stream events. Labels lead the stage they START
+      // (events fire on completion), so the status reflects what's happening now.
+      const final = await researchStream(query.trim(), (ev) => {
+        switch (ev.event) {
+          case "routed":
+            numSources = ev.sources.length;
+            setSrcRow(ev.sources);
+            setStage(STAGE_LABEL.gathering);
+            break;
+          case "source":
+            gathered += 1;
+            setLit(gathered);
+            setSignals(ev.pool);
+            if (gathered >= numSources) setStage(STAGE_LABEL.synthesizing);
+            break;
+          case "synthesis":
+            setLit(numSources); // all sources in; teardown is next
+            setStage(STAGE_LABEL.teardown);
+            break;
+          case "teardown":
+            break; // teardown done; the brief arrives next
+        }
+      });
+      setBrief(final);
+      setSrcRow(final.sources);
       setPhase("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Scout run failed.");
@@ -137,6 +157,9 @@ export default function Home() {
             brief={brief}
             phase={phase}
             lit={lit}
+            sources={srcRow}
+            signals={signals}
+            stage={stage}
             elapsed={elapsed}
             live={IS_LIVE}
           />

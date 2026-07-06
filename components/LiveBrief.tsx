@@ -40,16 +40,22 @@ export default function LiveBrief({
   brief,
   phase,
   lit,
+  sources,
   elapsed = 0,
   live = false,
+  stage,
+  signals,
 }: {
   brief: Brief;
   phase: Phase;
   lit: number; // completed steps: sources 0..n, then teardown = n+1
+  sources?: string[]; // source list to show in the row (real routed sources mid-run)
   elapsed?: number; // seconds since the run started (for the live loading state)
   live?: boolean; // true when calling the real agent (multi-minute)
+  stage?: string; // current stage label, shown while scouting
+  signals?: number; // running signal count while gathering
 }) {
-  const steps = [...brief.sources, "teardown…"];
+  const steps = [...(sources ?? brief.sources), "teardown…"];
 
   return (
     <section
@@ -61,7 +67,9 @@ export default function LiveBrief({
         <h2 className="text-[15px] font-medium">{brief.product}</h2>
         <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap shrink-0">
           {phase === "scouting" ? (
-            <span className="text-accent breathe">scouting…</span>
+            <span className="text-accent breathe">
+              {signals ? `${signals} signals…` : "scouting…"}
+            </span>
           ) : (
             <>
               <span
@@ -195,7 +203,7 @@ export default function LiveBrief({
           aria-live="polite"
         >
           <p className="font-mono text-[11px] text-ink-faint breathe">
-            reading sources…
+            {stage ?? "reading sources…"}
           </p>
           {live && (
             <p className="font-mono text-[11px] text-ink-faint mt-3 leading-relaxed">
