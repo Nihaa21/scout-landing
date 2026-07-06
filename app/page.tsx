@@ -6,12 +6,19 @@ import LiveBrief, { type Phase } from "@/components/LiveBrief";
 import { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOCK_BRIEF, researchStream, IS_LIVE, type Brief } from "@/lib/brief";
+import { researchStream, IS_LIVE, type Brief } from "@/lib/brief";
+
+const SUGGESTIONS: { label: string; mode: "product" | "industry" }[] = [
+  { label: "Jobber", mode: "product" },
+  { label: "Notion", mode: "product" },
+  { label: "on-device AI agents", mode: "industry" },
+];
 
 export default function Home() {
-  const [query, setQuery] = useState("Jobber");
+  const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"product" | "industry">("product");
-  const [brief, setBrief] = useState<Brief>(MOCK_BRIEF);
+  const [brief, setBrief] = useState<Brief | null>(null);
+  const [subject, setSubject] = useState(""); // what the current/last run is about
   const [phase, setPhase] = useState<Phase>("done");
 
   // theater state
@@ -32,8 +39,11 @@ export default function Home() {
 
   async function runScout(e: React.FormEvent) {
     e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
     if (ticker.current) clearInterval(ticker.current);
 
+    setSubject(q);
     setPhase("scouting");
     setError(null);
     setRoster(null);
@@ -51,7 +61,7 @@ export default function Home() {
     let chosen: string[] = [];
     let doneCount = 0;
     try {
-      const final = await researchStream(query.trim(), mode, (ev) => {
+      const final = await researchStream(q, mode, (ev) => {
         switch (ev.event) {
           case "routed": {
             chosen = ev.sources.map(prettySource);
@@ -89,45 +99,45 @@ export default function Home() {
     }
   }
 
+  const showBrief = phase === "scouting" || brief !== null;
+
   return (
     <div className="flex flex-1 flex-col">
       <p className="sr-only">
         Scout is a research agent for 0-to-1 product work. Enter a product or an
-        industry and it gathers public feedback across platforms, extracts ranked
-        themes with quotes, maps detailed pain points, builds an interview agenda,
-        and produces a full competitive breakdown. Below is a live example brief.
+        industry and it gathers public feedback across platforms live, extracts
+        ranked themes with quotes, maps detailed pain points, builds an interview
+        agenda, and produces a full competitive breakdown.
       </p>
 
-      {/* masthead */}
-      <header className="hairline-b px-5 sm:px-8">
-        <div className="max-w-6xl mx-auto py-4 flex items-baseline gap-3">
-          <p className="text-[19px] font-medium tracking-[-0.01em]">scout</p>
-          <p className="font-mono text-[11px] text-ink-soft">0→1 product research</p>
-        </div>
-      </header>
-
-      {/* hero */}
       <main className="flex-1 px-5 sm:px-8">
+        {/* centered identity + input */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-6xl mx-auto pt-14 sm:pt-20 pb-10 sm:pb-14"
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className={`max-w-2xl mx-auto text-center ${showBrief ? "pt-12 sm:pt-16 pb-10" : "pt-24 sm:pt-36 pb-16"}`}
         >
-          <h1 className="text-[26px] sm:text-[34px] leading-[1.2] font-normal tracking-[-0.01em] max-w-[26ch]">
-            Research what the market thinks — before you build it.
-          </h1>
-          <p className="mt-4 text-[15px] text-ink-soft max-w-[52ch]">
-            Scout reads the crowd across platforms, finds the themes, maps the
-            pain, and hands you the brief — with the questions worth asking humans.
+          {/* branding — big, center */}
+          <p className="text-[44px] sm:text-[56px] leading-none font-medium tracking-[-0.02em]">
+            scout
+          </p>
+          <p className="font-mono text-[11.5px] text-ink-soft mt-3">
+            0→1 product research
           </p>
 
-          <form onSubmit={runScout} className="mt-8 max-w-md">
-            {/* mode toggle */}
+          <h1 className="mt-8 text-[17px] sm:text-[19px] font-normal text-ink-soft leading-relaxed max-w-[46ch] mx-auto">
+            Research what the market thinks — before you build it. Scout reads
+            the crowd live, finds the themes, maps the pain, and hands you the
+            brief.
+          </h1>
+
+          <form onSubmit={runScout} className="mt-9 max-w-md mx-auto">
+            {/* mode toggle — centered */}
             <div
               role="tablist"
               aria-label="Research mode"
-              className="inline-flex hairline rounded-[10px] p-0.5 mb-2.5 font-mono text-[11px]"
+              className="inline-flex hairline rounded-[10px] p-0.5 mb-3 font-mono text-[11px]"
             >
               {(["product", "industry"] as const).map((m) => (
                 <button
@@ -136,7 +146,7 @@ export default function Home() {
                   role="tab"
                   aria-selected={mode === m}
                   onClick={() => setMode(m)}
-                  className={`px-3 py-1 rounded-[8px] transition-colors duration-200 cursor-pointer ${
+                  className={`px-3.5 py-1 rounded-[8px] transition-colors duration-200 cursor-pointer ${
                     mode === m ? "bg-accent-deep text-ink" : "text-ink-soft hover:text-ink"
                   }`}
                 >
@@ -144,6 +154,7 @@ export default function Home() {
                 </button>
               ))}
             </div>
+
             <div className="flex flex-col sm:flex-row gap-2.5">
               <label htmlFor="subject" className="sr-only">
                 {mode === "industry" ? "Industry to research" : "Product to research"}
@@ -155,37 +166,60 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={mode === "industry" ? "Enter an industry…" : "Enter a product…"}
                 autoComplete="off"
-                className="flex-1"
+                className="flex-1 text-center sm:text-left"
               />
-              <Button type="submit" disabled={phase === "scouting"}>
+              <Button type="submit" disabled={phase === "scouting" || !query.trim()}>
                 {phase === "scouting" ? "Scouting…" : "Run Scout"}
               </Button>
             </div>
+
+            {/* suggestions — not dummy data, just one-tap starts */}
+            {!showBrief && (
+              <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+                <span className="font-mono text-[10.5px] text-ink-faint">try</span>
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => {
+                      setQuery(s.label);
+                      setMode(s.mode);
+                    }}
+                    className="hairline rounded-full px-3 py-1 text-[11.5px] text-ink-soft hover:text-ink hover:border-accent/50 transition-colors duration-200 cursor-pointer"
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </form>
         </motion.div>
 
-        {/* the live brief — centerpiece */}
-        <div className="pb-24">
-          {error && (
-            <p role="alert" className="max-w-6xl mx-auto mb-3 text-[12.5px] text-neg font-mono">
-              ⚠ {error} — showing the last brief.
-            </p>
-          )}
-          <LiveBrief
-            brief={brief}
-            phase={phase}
-            roster={roster}
-            statuses={statuses}
-            stage={stage}
-            signals={signals}
-            elapsed={elapsed}
-            live={IS_LIVE}
-          />
-        </div>
+        {/* the live brief — only exists once a run starts */}
+        {showBrief && (
+          <div className="pb-24">
+            {error && (
+              <p role="alert" className="max-w-6xl mx-auto mb-3 text-[12.5px] text-neg font-mono">
+                ⚠ {error}
+              </p>
+            )}
+            <LiveBrief
+              product={subject}
+              brief={brief}
+              phase={phase}
+              roster={roster}
+              statuses={statuses}
+              stage={stage}
+              signals={signals}
+              elapsed={elapsed}
+              live={IS_LIVE}
+            />
+          </div>
+        )}
       </main>
 
       <footer className="hairline-t px-5 sm:px-8 py-4">
-        <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto">
+        <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto text-center">
           scout · autonomous voice-of-customer research
         </p>
       </footer>

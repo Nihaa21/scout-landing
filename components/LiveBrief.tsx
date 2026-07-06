@@ -61,6 +61,7 @@ function Severity({ n }: { n: number }) {
 }
 
 export default function LiveBrief({
+  product,
   brief,
   phase,
   roster,
@@ -70,7 +71,8 @@ export default function LiveBrief({
   elapsed = 0,
   live = false,
 }: {
-  brief: Brief;
+  product: string;
+  brief: Brief | null;
   phase: Phase;
   roster: string[] | null;
   statuses: Record<string, SourceStatus>;
@@ -81,23 +83,27 @@ export default function LiveBrief({
 }) {
   // Assembly gate: theme grid waits for "the one thing" to finish typing.
   const [typed, setTyped] = useState(false);
-  useEffect(() => setTyped(false), [brief.oneThing]);
+  useEffect(() => setTyped(false), [brief?.oneThing]);
 
-  const kpis: [string, number][] = [
-    ["signals read", brief.signals],
-    ["themes found", brief.themes.length],
-    ["competitors analyzed", Math.max(brief.teardown.length, brief.competitive.battle_table?.length ?? 0)],
-    ["questions to ask", brief.interview.length],
-  ];
+  if (phase !== "scouting" && !brief) return null;
+
+  const kpis: [string, number][] = brief
+    ? [
+        ["signals read", brief.signals],
+        ["themes found", brief.themes.length],
+        ["competitors analyzed", Math.max(brief.teardown.length, brief.competitive.battle_table?.length ?? 0)],
+        ["questions to ask", brief.interview.length],
+      ]
+    : [];
 
   return (
     <section
-      aria-label={`Research brief for ${brief.product}`}
+      aria-label={`Research brief for ${product}`}
       className="hairline rounded-[12px] w-full max-w-6xl mx-auto overflow-hidden"
     >
       {/* header row */}
       <header className="hairline-b flex items-baseline justify-between gap-4 px-5 py-3.5 sm:px-7 bg-surface/50">
-        <h2 className="text-[15px] font-medium">{brief.product}</h2>
+        <h2 className="text-[15px] font-medium">{product}</h2>
         <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap shrink-0">
           {phase === "scouting" ? (
             <span className="text-accent breathe">
@@ -109,13 +115,13 @@ export default function LiveBrief({
                 aria-hidden="true"
                 className="inline-block size-[6px] rounded-full bg-accent-bright"
               />
-              live · {brief.signals} signals
+              live · {brief!.signals} signals
             </>
           )}
         </p>
       </header>
 
-      {phase === "scouting" ? (
+      {phase === "scouting" || !brief ? (
         <Theater stage={stage} roster={roster} statuses={statuses} elapsed={elapsed} live={live} />
       ) : (
         <div className="px-5 py-6 sm:px-7 sm:py-8">
