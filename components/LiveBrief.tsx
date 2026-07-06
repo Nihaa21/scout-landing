@@ -1,6 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import CompetitiveBreakdown from "@/components/CompetitiveBreakdown";
+import Theater, { type SourceStatus, type TheaterStage } from "@/components/Theater";
+import CountUp from "@/components/motion/CountUp";
+import Typewriter from "@/components/motion/Typewriter";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import type { Brief, Sentiment } from "@/lib/brief";
 
 export type Phase = "scouting" | "done";
@@ -11,33 +18,24 @@ const DOT: Record<Sentiment, string> = {
   negative: "bg-neg",
 };
 
-function SourceStep({
-  label,
-  state,
-}: {
-  label: string;
-  state: "todo" | "active" | "done";
-}) {
-  return (
-    <li
-      className={`font-mono text-[11px] tracking-wide flex items-center gap-1.5 transition-colors duration-300 ${
-        state === "done"
-          ? "text-ink"
-          : state === "active"
-            ? "text-accent breathe"
-            : "text-ink-faint"
-      }`}
-    >
-      <span aria-hidden="true" className={state === "done" ? "text-accent" : ""}>
-        {state === "done" ? "✓" : "·"}
-      </span>
-      {label}
-      {state === "done" && <span className="sr-only">— read</span>}
-    </li>
-  );
-}
+const EASE = [0.16, 1, 0.3, 1] as const;
 
-function SectionLabel({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+};
+const riseIn = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
+};
+
+function SectionLabel({
+  children,
+  accent = false,
+}: {
+  children: React.ReactNode;
+  accent?: boolean;
+}) {
   return (
     <p className={`font-mono text-[11px] mb-3 ${accent ? "text-accent" : "text-ink-soft"}`}>
       {children}
@@ -45,14 +43,17 @@ function SectionLabel({ children, accent = false }: { children: React.ReactNode;
   );
 }
 
-/* severity as five small squares, filled in the negative red */
 function Severity({ n }: { n: number }) {
   return (
     <span className="inline-flex items-center gap-[3px]" aria-label={`severity ${n} of 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <span
+        <motion.span
           key={i}
-          className={`size-[7px] rounded-[2px] ${i < n ? "bg-neg" : "bg-ink/10"}`}
+          initial={{ scaleY: 0 }}
+          whileInView={{ scaleY: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.15 + i * 0.06, duration: 0.3, ease: EASE }}
+          className={`size-[7px] rounded-[2px] origin-bottom ${i < n ? "bg-neg" : "bg-ink/15"}`}
         />
       ))}
     </span>
@@ -62,25 +63,27 @@ function Severity({ n }: { n: number }) {
 export default function LiveBrief({
   brief,
   phase,
-  lit,
-  sources,
-  elapsed = 0,
-  live = false,
+  roster,
+  statuses,
   stage,
   signals,
+  elapsed = 0,
+  live = false,
 }: {
   brief: Brief;
   phase: Phase;
-  lit: number;
-  sources?: string[];
+  roster: string[] | null;
+  statuses: Record<string, SourceStatus>;
+  stage: TheaterStage;
+  signals: number;
   elapsed?: number;
   live?: boolean;
-  stage?: string;
-  signals?: number;
 }) {
-  const steps = [...(sources ?? brief.sources), "teardown…"];
+  // Assembly gate: theme grid waits for "the one thing" to finish typing.
+  const [typed, setTyped] = useState(false);
+  useEffect(() => setTyped(false), [brief.oneThing]);
 
-  const kpis: [string, string | number][] = [
+  const kpis: [string, number][] = [
     ["signals read", brief.signals],
     ["themes found", brief.themes.length],
     ["competitors analyzed", Math.max(brief.teardown.length, brief.competitive.battle_table?.length ?? 0)],
@@ -90,10 +93,10 @@ export default function LiveBrief({
   return (
     <section
       aria-label={`Research brief for ${brief.product}`}
-      className="hairline rounded-[12px] w-full max-w-6xl mx-auto"
+      className="hairline rounded-[12px] w-full max-w-6xl mx-auto overflow-hidden"
     >
       {/* header row */}
-      <header className="hairline-b flex items-baseline justify-between gap-4 px-5 py-3.5 sm:px-7">
+      <header className="hairline-b flex items-baseline justify-between gap-4 px-5 py-3.5 sm:px-7 bg-surface/50">
         <h2 className="text-[15px] font-medium">{brief.product}</h2>
         <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap shrink-0">
           {phase === "scouting" ? (
@@ -112,52 +115,85 @@ export default function LiveBrief({
         </p>
       </header>
 
-      {/* sources row */}
-      <ul
-        aria-label="Sources"
-        className="hairline-b flex flex-wrap gap-x-5 gap-y-1.5 px-5 py-3 sm:px-7"
-      >
-        {steps.map((s, i) => (
-          <SourceStep
-            key={s}
-            label={s}
-            state={
-              phase === "done" ? "done" : i < lit ? "done" : i === lit ? "active" : "todo"
-            }
-          />
-        ))}
-      </ul>
-
-      {phase === "done" ? (
+      {phase === "scouting" ? (
+        <Theater stage={stage} roster={roster} statuses={statuses} elapsed={elapsed} live={live} />
+      ) : (
         <div className="px-5 py-6 sm:px-7 sm:py-8">
-          {/* KPI band */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 rise"
-            style={{ "--d": "0s" } as React.CSSProperties}>
-            {kpis.map(([label, value]) => (
-              <div key={label} className="hairline rounded-[12px] px-5 py-4">
-                <p className="text-[24px] leading-none font-medium">{value}</p>
-                <p className="font-mono text-[10px] text-ink-faint mt-1.5">{label}</p>
-              </div>
+          {/* sources strip */}
+          <motion.ul
+            aria-label="Sources read"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-wrap gap-x-5 gap-y-1.5 mb-7"
+          >
+            {brief.sources.map((s, i) => (
+              <motion.li
+                key={s}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.12, duration: 0.4, ease: EASE }}
+                className="font-mono text-[11px] text-ink flex items-center gap-1.5"
+              >
+                <span className="text-accent">✓</span>
+                {s}
+              </motion.li>
             ))}
-          </div>
+          </motion.ul>
 
-          {/* the one thing */}
-          <div className="mt-9 rise" style={{ "--d": "0.06s" } as React.CSSProperties}>
+          {/* KPI band — numbers count up */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+          >
+            {kpis.map(([label, value], i) => (
+              <motion.div key={label} variants={riseIn}>
+                <Card className="px-5 py-4 hover:border-accent/40">
+                  <p className="text-[24px] leading-none font-medium tabular-nums">
+                    <CountUp value={value} delay={0.3 + i * 0.12} />
+                  </p>
+                  <p className="font-mono text-[10px] text-ink-faint mt-1.5">{label}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* the one thing — types itself in */}
+          <div className="mt-10">
             <SectionLabel accent>the one thing</SectionLabel>
-            <p className="text-[24px] sm:text-[28px] leading-snug font-normal max-w-[44ch]">
-              {brief.oneThing}
+            <p className="text-[24px] sm:text-[28px] leading-snug font-normal max-w-[44ch] min-h-[2.4em]">
+              <Typewriter
+                key={brief.oneThing}
+                text={brief.oneThing}
+                delay={500}
+                speed={16}
+                onDone={() => setTyped(true)}
+              />
             </p>
           </div>
 
-          {/* main grid: themes + rail */}
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] rise"
-            style={{ "--d": "0.12s" } as React.CSSProperties}>
-            {/* MAIN — themes, gap→ask always visible */}
+          {/* main grid: themes + rail — assembles after the one thing lands */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate={typed ? "show" : "hidden"}
+            className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]"
+          >
             <div>
-              <SectionLabel>themes — ranked by frequency × severity</SectionLabel>
+              <motion.div variants={riseIn}>
+                <SectionLabel>themes — ranked by frequency × severity</SectionLabel>
+              </motion.div>
               <div className="grid gap-3 xl:grid-cols-2">
                 {brief.themes.map((t) => (
-                  <article key={t.title} className="hairline rounded-[12px] p-4">
+                  <motion.article
+                    key={t.title}
+                    variants={riseIn}
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.25, ease: EASE }}
+                    className="hairline rounded-[12px] p-4 bg-surface/40 group hover:border-accent/50 transition-colors duration-300"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-[13.5px] font-medium leading-snug flex items-baseline gap-2">
                         <span
@@ -167,7 +203,7 @@ export default function LiveBrief({
                         <span className="sr-only">{t.sentiment} theme:</span>
                         {t.title}
                       </h3>
-                      <span className="font-mono text-[11px] text-ink-faint whitespace-nowrap">
+                      <span className="font-mono text-[11px] text-ink-faint whitespace-nowrap group-hover:text-accent transition-colors duration-300">
                         ×{t.mentions}
                       </span>
                     </div>
@@ -184,26 +220,29 @@ export default function LiveBrief({
                         {t.ask}
                       </p>
                     </div>
-                  </article>
+                  </motion.article>
                 ))}
               </div>
             </div>
 
-            {/* RAIL — interview agenda + targets */}
-            <aside className="space-y-8 lg:pl-8 lg:border-l-[0.5px] lg:border-[var(--color-hairline)]">
+            {/* rail */}
+            <motion.aside
+              variants={riseIn}
+              className="space-y-8 lg:pl-8 lg:border-l-[0.5px] lg:border-[var(--color-hairline)]"
+            >
               {brief.interview.length > 0 && (
                 <div>
                   <SectionLabel accent>interview agenda</SectionLabel>
                   <ol className="space-y-3.5">
                     {brief.interview.map((q, i) => (
-                      <li key={q.question} className="flex gap-2.5">
+                      <li key={q.question} className="flex gap-2.5 group">
                         <span className="font-mono text-[10px] text-accent shrink-0 translate-y-[2px]">
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <div>
                           <p className="text-[12.5px] leading-relaxed">{q.question}</p>
                           {q.why && (
-                            <p className="font-mono text-[10px] text-ink-faint mt-1 leading-relaxed">
+                            <p className="font-mono text-[10px] text-ink-faint mt-1 leading-relaxed opacity-70 group-hover:opacity-100 group-hover:text-ink-soft transition-all duration-300">
                               → {q.why}
                             </p>
                           )}
@@ -231,11 +270,8 @@ export default function LiveBrief({
                           <p className="font-mono text-[10px] text-ink-faint mb-1.5">{label}</p>
                           <ul className="flex flex-wrap gap-1.5">
                             {items.map((item) => (
-                              <li
-                                key={item}
-                                className="hairline rounded-full px-2.5 py-0.5 text-[11px] text-ink-soft"
-                              >
-                                {item}
+                              <li key={item}>
+                                <Badge>{item}</Badge>
                               </li>
                             ))}
                           </ul>
@@ -244,60 +280,57 @@ export default function LiveBrief({
                   )}
                 </div>
               )}
-            </aside>
-          </div>
+            </motion.aside>
+          </motion.div>
 
-          {/* pain map — the real scout */}
+          {/* pain map */}
           {brief.pains.length > 0 && (
-            <div className="mt-12 rise" style={{ "--d": "0.18s" } as React.CSSProperties}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, ease: EASE }}
+              className="mt-12"
+            >
               <div className="hairline-t pt-6">
                 <SectionLabel accent>pain map — who hurts, when, and what it costs</SectionLabel>
                 <div className="grid gap-3 lg:grid-cols-2">
                   {brief.pains.map((p) => (
-                    <article key={p.pain} className="hairline rounded-[12px] p-4 sm:p-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[13.5px] font-medium">{p.pain}</h3>
-                        <Severity n={p.severity} />
-                      </div>
-                      <p className="text-[12.5px] text-ink-soft leading-relaxed mt-2.5">
-                        {p.detail}
-                      </p>
-                      {p.quote && (
-                        <blockquote className="hairline-l mt-3 pl-3 font-serif italic text-[12.5px] text-ink-soft leading-relaxed">
-                          “{p.quote}”
-                        </blockquote>
-                      )}
-                    </article>
+                    <motion.div key={p.pain} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+                      <Card className="p-4 sm:p-5 h-full hover:border-neg/40">
+                        <div className="flex items-center justify-between gap-3">
+                          <h3 className="text-[13.5px] font-medium">{p.pain}</h3>
+                          <Severity n={p.severity} />
+                        </div>
+                        <p className="text-[12.5px] text-ink-soft leading-relaxed mt-2.5">
+                          {p.detail}
+                        </p>
+                        {p.quote && (
+                          <blockquote className="hairline-l mt-3 pl-3 font-serif italic text-[12.5px] text-ink-soft leading-relaxed">
+                            “{p.quote}”
+                          </blockquote>
+                        )}
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* competitive breakdown */}
-          <div className="mt-12 rise" style={{ "--d": "0.24s" } as React.CSSProperties}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="mt-12"
+          >
             <div className="hairline-t pt-6">
               <SectionLabel accent>competitive breakdown</SectionLabel>
               <CompetitiveBreakdown competitive={brief.competitive} teardown={brief.teardown} />
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="px-5 py-16 sm:px-7 text-center" role="status" aria-live="polite">
-          <p className="font-mono text-[11px] text-ink-faint breathe">
-            {stage ?? "reading sources…"}
-          </p>
-          {live && (
-            <p className="font-mono text-[11px] text-ink-faint mt-3 leading-relaxed">
-              scout is doing live research — this takes a few minutes
-              {elapsed > 0 && (
-                <>
-                  {" "}
-                  · <span className="text-ink-soft">{elapsed}s</span>
-                </>
-              )}
-            </p>
-          )}
+          </motion.div>
         </div>
       )}
     </section>

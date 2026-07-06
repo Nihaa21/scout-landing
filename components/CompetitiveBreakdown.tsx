@@ -1,33 +1,55 @@
 "use client";
 
+import { motion } from "motion/react";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Competitive, TeardownRow } from "@/lib/brief";
 
-/* Section label in the house style. */
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 function Label({ children }: { children: React.ReactNode }) {
   return <p className="font-mono text-[11px] text-ink-soft mb-3">{children}</p>;
 }
 
-/* ── 2x2 positioning map (SVG, paper/ink style) ─────────────────────────── */
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.55, delay, ease: EASE }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ── 2x2 positioning map ─────────────────────────────────────────────────── */
 function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
-  const W = 640, H = 420, M = 46; // canvas + margin for labels
+  const W = 640, H = 420, M = 46;
   const px = (v: number) => M + (Math.min(100, Math.max(0, v)) / 100) * (W - 2 * M);
   const py = (v: number) => H - M - (Math.min(100, Math.max(0, v)) / 100) * (H - 2 * M);
 
   return (
-    <figure className="hairline rounded-[12px] p-4">
+    <Card className="p-4">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={`Positioning map: ${p.x_axis.label} vs ${p.y_axis.label}`}
         className="w-full h-auto"
       >
-        {/* quadrant frame + midlines */}
         <rect x={M} y={M} width={W - 2 * M} height={H - 2 * M} fill="none"
           stroke="var(--color-hairline)" strokeWidth="1" />
         <line x1={W / 2} y1={M} x2={W / 2} y2={H - M} stroke="var(--color-hairline)" strokeWidth="1" />
         <line x1={M} y1={H / 2} x2={W - M} y2={H / 2} stroke="var(--color-hairline)" strokeWidth="1" />
 
-        {/* axis labels */}
         <text x={W / 2} y={H - 10} textAnchor="middle" fontSize="11"
           fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.x_axis.label}</text>
         <text x={M} y={H - M + 16} textAnchor="start" fontSize="10"
@@ -41,10 +63,21 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
         <text x={M - 6} y={H - M} textAnchor="end" fontSize="10"
           fontFamily="var(--font-mono)" fill="var(--color-ink-faint)">{p.y_axis.low}</text>
 
-        {/* players */}
-        {p.players.map((pl) => (
-          <g key={pl.name}>
+        {p.players.map((pl, i) => (
+          <motion.g
+            key={pl.name}
+            initial={{ opacity: 0, scale: 0.6 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.25 + i * 0.1, duration: 0.45, ease: EASE }}
+            style={{ transformOrigin: `${px(pl.x)}px ${py(pl.y)}px` }}
+            className="cursor-default"
+          >
             <title>{`${pl.name} — ${pl.note}`}</title>
+            {pl.is_subject && (
+              <circle cx={px(pl.x)} cy={py(pl.y)} r={13}
+                fill="var(--color-accent)" opacity="0.15" />
+            )}
             <circle
               cx={px(pl.x)} cy={py(pl.y)} r={pl.is_subject ? 7 : 5}
               fill={pl.is_subject ? "var(--color-accent)" : "var(--color-paper)"}
@@ -59,32 +92,32 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
             >
               {pl.name}
             </text>
-          </g>
+          </motion.g>
         ))}
       </svg>
-      <figcaption className="sr-only">
-        {p.players.map((pl) => `${pl.name}: ${pl.note}`).join(". ")}
-      </figcaption>
-    </figure>
+      <p className="sr-only">{p.players.map((pl) => `${pl.name}: ${pl.note}`).join(". ")}</p>
+    </Card>
   );
 }
 
-/* ── Porter's five forces ────────────────────────────────────────────────── */
+/* ── five forces ─────────────────────────────────────────────────────────── */
 function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]> }) {
   return (
     <div className="space-y-4">
-      {forces.map((f) => (
+      {forces.map((f, fi) => (
         <div key={f.force} className="hairline-b pb-4 last:border-b-0 last:pb-0">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[12.5px] font-medium">{f.force}</p>
-            <div
-              className="flex items-center gap-1 shrink-0"
-              aria-label={`${f.score} out of 10 — ${f.level}`}
-            >
+            <div className="flex items-center gap-1 shrink-0"
+              aria-label={`${f.score} out of 10 — ${f.level}`}>
               {Array.from({ length: 10 }).map((_, i) => (
-                <span
+                <motion.span
                   key={i}
-                  className={`h-[3px] w-2.5 rounded-full ${i < f.score ? "bg-accent" : "bg-ink/10"}`}
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  whileInView={{ opacity: 1, scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 + fi * 0.08 + i * 0.025, duration: 0.25 }}
+                  className={`h-[3px] w-2.5 rounded-full origin-left ${i < f.score ? "bg-accent" : "bg-ink/15"}`}
                 />
               ))}
               <span className="font-mono text-[10px] text-ink-faint ml-1.5">{f.level}</span>
@@ -97,7 +130,7 @@ function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]
   );
 }
 
-/* ── The whole breakdown ─────────────────────────────────────────────────── */
+/* ── the whole breakdown ─────────────────────────────────────────────────── */
 export default function CompetitiveBreakdown({
   competitive,
   teardown,
@@ -115,77 +148,79 @@ export default function CompetitiveBreakdown({
       {(positioning?.players?.length || five_forces?.length) && (
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start">
           {positioning && positioning.players?.length > 0 && (
-            <div>
+            <Reveal>
               <Label>positioning map</Label>
               <PositioningMap p={positioning} />
-            </div>
+            </Reveal>
           )}
           {five_forces && five_forces.length > 0 && (
-            <div>
+            <Reveal delay={0.1}>
               <Label>five forces</Label>
               <FiveForces forces={five_forces} />
-            </div>
+            </Reveal>
           )}
         </div>
       )}
 
       {battle_table && battle_table.length > 0 && (
-        <div>
+        <Reveal>
           <Label>battle table — how to win against each</Label>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-[12.5px]">
-              <thead>
-                <tr className="hairline-b font-mono text-[11px] text-ink-faint">
-                  <th className="py-2 pr-4 font-normal">competitor</th>
-                  <th className="py-2 pr-4 font-normal">really serves</th>
-                  <th className="py-2 pr-4 font-normal">pricing</th>
-                  <th className="py-2 pr-4 font-normal">strength</th>
-                  <th className="py-2 pr-4 font-normal">weakness</th>
-                  <th className="py-2 font-normal">how to win</th>
-                </tr>
-              </thead>
-              <tbody className="align-top">
-                {battle_table.map((r) => (
-                  <tr key={r.name} className="hairline-b last:border-b-0">
-                    <td className="py-2.5 pr-4 font-medium whitespace-nowrap">{r.name}</td>
-                    <td className="py-2.5 pr-4 text-ink-soft">{r.segment}</td>
-                    <td className="py-2.5 pr-4 font-mono text-[11px] whitespace-nowrap">{r.pricing}</td>
-                    <td className="py-2.5 pr-4 text-ink-soft">{r.strength}</td>
-                    <td className="py-2.5 pr-4 text-ink-soft">{r.weakness}</td>
-                    <td className="py-2.5 text-accent">{r.how_to_win}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <tr className="hairline-b">
+                <TableHead>competitor</TableHead>
+                <TableHead>really serves</TableHead>
+                <TableHead>pricing</TableHead>
+                <TableHead>strength</TableHead>
+                <TableHead>weakness</TableHead>
+                <TableHead>how to win</TableHead>
+              </tr>
+            </TableHeader>
+            <TableBody>
+              {battle_table.map((r) => (
+                <TableRow key={r.name}>
+                  <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
+                  <TableCell className="text-ink-soft">{r.segment}</TableCell>
+                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{r.pricing}</TableCell>
+                  <TableCell className="text-ink-soft">{r.strength}</TableCell>
+                  <TableCell className="text-ink-soft">{r.weakness}</TableCell>
+                  <TableCell className="text-accent pr-0">{r.how_to_win}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Reveal>
       )}
 
       {whitespace && whitespace.length > 0 && (
-        <div>
+        <Reveal>
           <Label>whitespace — underserved gaps</Label>
           <div className="grid gap-3 sm:grid-cols-3">
             {whitespace.map((w, i) => (
-              <div key={w.opportunity} className="hairline rounded-[12px] p-4">
-                <p className="font-mono text-[11px] text-ink-faint mb-1.5">0{i + 1}</p>
-                <p className="text-[13.5px] font-medium leading-snug">{w.opportunity}</p>
-                <p className="text-[12px] text-ink-soft mt-2 leading-relaxed">
-                  <span className="font-mono text-[10px] text-ink-faint mr-1">why now</span>
-                  {w.why_now}
-                </p>
-                <p className="font-serif italic text-[12px] text-ink-soft mt-2 leading-relaxed">
-                  {w.evidence}
-                </p>
-              </div>
+              <motion.div key={w.opportunity} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+                <Card className="p-4 h-full hover:border-accent/40">
+                  <p className="font-mono text-[11px] text-accent mb-1.5">
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <p className="text-[13.5px] font-medium leading-snug">{w.opportunity}</p>
+                  <p className="text-[12px] text-ink-soft mt-2 leading-relaxed">
+                    <span className="font-mono text-[10px] text-ink-faint mr-1">why now</span>
+                    {w.why_now}
+                  </p>
+                  <p className="font-serif italic text-[12px] text-ink-soft mt-2 leading-relaxed">
+                    {w.evidence}
+                  </p>
+                </Card>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </Reveal>
       )}
 
       {strategy && (
-        <div>
+        <Reveal>
           <Label>0→1 strategy</Label>
-          <div className="hairline rounded-[12px] p-4 sm:p-5 space-y-3">
+          <Card className="p-4 sm:p-5 space-y-3">
             {(
               [
                 ["beachhead", strategy.beachhead],
@@ -213,36 +248,34 @@ export default function CompetitiveBreakdown({
                 </ol>
               </div>
             )}
-          </div>
-        </div>
+          </Card>
+        </Reveal>
       )}
 
       {teardown.length > 0 && (
-        <div>
+        <Reveal>
           <Label>scraped facts — G2 · Capterra · pricing pages</Label>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[12.5px]">
-              <thead>
-                <tr className="hairline-b font-mono text-[11px] text-ink-faint">
-                  <th className="py-2 pr-4 font-normal">competitor</th>
-                  <th className="py-2 pr-4 font-normal">pricing</th>
-                  <th className="py-2 pr-4 font-normal">rating</th>
-                  <th className="py-2 font-normal">top complaint</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teardown.map((r) => (
-                  <tr key={r.competitor} className="hairline-b last:border-b-0">
-                    <td className="py-2.5 pr-4 font-medium whitespace-nowrap">{r.competitor}</td>
-                    <td className="py-2.5 pr-4 font-mono text-[11.5px] whitespace-nowrap">{r.pricing}</td>
-                    <td className="py-2.5 pr-4 font-mono text-[11.5px] whitespace-nowrap">{r.rating}</td>
-                    <td className="py-2.5 text-ink-soft">{r.complaint}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <Table>
+            <TableHeader>
+              <tr className="hairline-b">
+                <TableHead>competitor</TableHead>
+                <TableHead>pricing</TableHead>
+                <TableHead>rating</TableHead>
+                <TableHead>top complaint</TableHead>
+              </tr>
+            </TableHeader>
+            <TableBody>
+              {teardown.map((r) => (
+                <TableRow key={r.competitor}>
+                  <TableCell className="font-medium whitespace-nowrap">{r.competitor}</TableCell>
+                  <TableCell className="font-mono text-[11.5px] whitespace-nowrap">{r.pricing}</TableCell>
+                  <TableCell className="font-mono text-[11.5px] whitespace-nowrap">{r.rating}</TableCell>
+                  <TableCell className="text-ink-soft">{r.complaint}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Reveal>
       )}
     </div>
   );
