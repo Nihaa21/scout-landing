@@ -100,9 +100,10 @@ export default function Home() {
 
       {/* masthead */}
       <header className="hairline-b px-5 sm:px-8">
-        <div className="max-w-6xl mx-auto py-4 flex items-baseline gap-3">
-          <p className="text-[19px] font-medium tracking-[-0.01em]">scout</p>
-          <p className="font-mono text-[11px] text-ink-soft">0→1 product research</p>
+        <div className="max-w-6xl mx-auto py-4 flex items-center justify-center gap-2">
+          <p className="font-mono text-[11px] tracking-[0.02em] text-ink-soft">
+            scout <span className="text-ink-faint">/ 0→1 product research</span>
+          </p>
         </div>
       </header>
 
@@ -112,22 +113,32 @@ export default function Home() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-6xl mx-auto pt-14 sm:pt-20 pb-10 sm:pb-14"
+          className="max-w-3xl mx-auto pt-16 sm:pt-24 pb-10 sm:pb-16 flex flex-col items-center text-center"
         >
-          <h1 className="text-[26px] sm:text-[34px] leading-[1.2] font-normal tracking-[-0.01em] max-w-[26ch]">
+          {/* big centered wordmark */}
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[64px] sm:text-[92px] leading-[0.9] font-medium tracking-[-0.04em] mb-6"
+          >
+            scout
+          </motion.p>
+
+          <h1 className="text-[26px] sm:text-[38px] leading-[1.15] font-normal tracking-[-0.015em] text-balance max-w-[22ch]">
             Research what the market thinks — before you build it.
           </h1>
-          <p className="mt-4 text-[15px] text-ink-soft max-w-[52ch]">
+          <p className="mt-5 text-[15px] sm:text-[16px] text-ink-soft leading-relaxed text-pretty max-w-[52ch]">
             Scout reads the crowd across platforms, finds the themes, maps the
             pain, and hands you the brief — with the questions worth asking humans.
           </p>
 
-          <form onSubmit={runScout} className="mt-8 max-w-md">
+          <form onSubmit={runScout} className="mt-9 w-full max-w-md flex flex-col items-center">
             {/* mode toggle */}
             <div
               role="tablist"
               aria-label="Research mode"
-              className="inline-flex hairline rounded-[10px] p-0.5 mb-2.5 font-mono text-[11px]"
+              className="inline-flex hairline rounded-[10px] p-0.5 mb-3 font-mono text-[11px]"
             >
               {(["product", "industry"] as const).map((m) => (
                 <button
@@ -144,7 +155,7 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-2.5">
+            <div className="flex flex-col sm:flex-row gap-2.5 w-full">
               <label htmlFor="subject" className="sr-only">
                 {mode === "industry" ? "Industry to research" : "Product to research"}
               </label>
@@ -155,7 +166,7 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={mode === "industry" ? "Enter an industry…" : "Enter a product…"}
                 autoComplete="off"
-                className="flex-1"
+                className="flex-1 text-center sm:text-left"
               />
               <Button type="submit" disabled={phase === "scouting"}>
                 {phase === "scouting" ? "Scouting…" : "Run Scout"}
