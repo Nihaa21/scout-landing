@@ -133,8 +133,8 @@ export default function Home() {
           <h1 className="mt-8 text-[17px] sm:text-[19px] font-normal text-ink-soft leading-relaxed max-w-[46ch] mx-auto">
             Research what the market thinks — before you build it.
             <span className="block mt-2">
-              Scout reads the crowd live, finds the themes, maps the pain, and
-              hands you the brief.
+              Scout reads the crowd live, finds the themes, maps the pain,
+              writes your user interview questions, and hands you the brief.
             </span>
           </h1>
 
