@@ -15,10 +15,10 @@ export interface SourceStatus {
 }
 
 /* Everything Scout knows how to read — shown while the router decides. */
-const CANDIDATES = ["hacker news", "reddit", "youtube", "app store", "bluesky"];
+const CANDIDATES = ["hacker news", "reddit", "youtube", "app store", "bluesky", "open web"];
 
-export const prettySource = (s: string) =>
-  ({ hackernews: "hacker news", appstore: "app store" })[s] ?? s;
+export const prettySource = (s: string): string =>
+  ({ hackernews: "hacker news", appstore: "app store", web: "open web" } as Record<string, string>)[s] ?? s;
 
 const STAGE_COPY: Record<TheaterStage, [string, string]> = {
   routing: ["routing sources", "deciding where the signal lives for this subject"],
