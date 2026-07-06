@@ -8,7 +8,6 @@ import PlatformLogo from "@/components/PlatformLogo";
 import Theater, { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
 import CountUp from "@/components/motion/CountUp";
 import Typewriter from "@/components/motion/Typewriter";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Brief, Sentiment } from "@/lib/brief";
 
@@ -40,7 +39,7 @@ function SectionHead({
 }) {
   return (
     <div className="mb-5">
-      <p className="font-mono text-[11px] text-accent mb-1.5">{kicker}</p>
+      <p className="font-mono text-[12.5px] font-semibold tracking-[0.02em] text-accent mb-2">{kicker}</p>
       <h2 className="text-[22px] sm:text-[27px] font-bold tracking-[-0.02em] leading-tight">
         {title}
       </h2>
@@ -110,21 +109,44 @@ export default function LiveBrief({
       aria-label={`Research brief for ${product}`}
       className="print-root hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
     >
-      {/* header */}
-      <header className="hairline-b flex items-center justify-between gap-4 px-6 py-4 sm:px-8 bg-surface/80">
-        <h2 className="text-[16px] font-semibold">{product}</h2>
-        <div className="flex items-center gap-4 shrink-0">
-          <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap">
-            {phase === "scouting" ? (
-              <span className="text-accent breathe">{signals ? `${signals} signals…` : "scouting…"}</span>
-            ) : (
-              <>
-                <span aria-hidden="true" className="inline-block size-[6px] rounded-full bg-accent" />
-                Live · {brief!.signals} Signals
-              </>
-            )}
-          </p>
-          {phase !== "scouting" && brief && <DownloadPdf />}
+      {/* header — product centered + prominent live/signals */}
+      <header className="relative hairline-b px-6 py-7 sm:px-8 bg-surface/80 pr-32 sm:pr-40">
+        {phase !== "scouting" && brief && (
+          <div className="absolute right-5 sm:right-6 top-1/2 -translate-y-1/2">
+            <DownloadPdf />
+          </div>
+        )}
+        <h2 className="text-[26px] sm:text-[34px] font-bold tracking-[-0.02em] leading-none">
+          {product}
+        </h2>
+        <div className="mt-3.5 flex justify-start">
+          {phase === "scouting" ? (
+            <span className="inline-flex items-center gap-2 rounded-full hairline px-3.5 py-1 font-mono text-[12px]">
+              <span aria-hidden="true" className="size-[7px] rounded-full bg-accent breathe" />
+              <span className="text-accent">
+                {signals ? (
+                  <>
+                    <span className="font-semibold">{signals}</span> signals…
+                  </>
+                ) : (
+                  "scouting…"
+                )}
+              </span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full bg-accent-deep/10 px-4 py-1.5">
+              <span aria-hidden="true" className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 breathe" />
+                <span className="relative inline-flex size-2 rounded-full bg-accent" />
+              </span>
+              <span className="font-mono text-[12px] text-ink-soft">Live</span>
+              <span className="font-mono text-[12px] text-ink-faint">·</span>
+              <span className="text-[16px] font-bold text-accent tabular-nums leading-none">
+                {brief!.signals}
+              </span>
+              <span className="font-mono text-[12px] text-ink-soft">Signals</span>
+            </span>
+          )}
         </div>
       </header>
 
@@ -173,7 +195,7 @@ export default function LiveBrief({
 
           {/* The One Thing */}
           <div className="mt-14">
-            <p className="font-mono text-[11px] text-accent mb-2.5">The One Thing</p>
+            <p className="font-mono text-[12.5px] font-semibold tracking-[0.02em] text-accent mb-2.5">The One Thing</p>
             <p className="text-[26px] sm:text-[32px] leading-[1.28] font-medium tracking-[-0.015em] max-w-[46ch] min-h-[2.2em]">
               <Typewriter key={brief.oneThing} text={brief.oneThing} delay={500} speed={16} onDone={() => setTyped(true)} />
             </p>
@@ -214,16 +236,34 @@ export default function LiveBrief({
                     <blockquote className="hairline-l mt-3 pl-3 font-serif italic text-[13.5px] text-ink-soft leading-relaxed">
                       “{t.quote}”
                     </blockquote>
-                    <p className="mt-3.5 text-[12.5px] leading-relaxed">
-                      <span className="font-semibold">Open question:</span>{" "}
-                      <span className="text-ink-soft">{t.gap}</span>
-                    </p>
-                    <p className="mt-2 text-[12.5px] leading-relaxed">
-                      <span className={`font-semibold ${isAsk ? "text-accent" : "text-ink"}`}>
-                        {isAsk ? "🗣 Ask a human:" : "🔬 Research it:"}
-                      </span>{" "}
-                      <span className={isAsk ? "text-accent" : "text-ink-soft"}>{t.ask}</span>
-                    </p>
+
+                    {/* Open question — boxed */}
+                    <div className="mt-4 rounded-[9px] hairline bg-paper/60 px-3 py-2.5">
+                      <span className="inline-block rounded-full bg-ink/[0.06] px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-ink-soft">
+                        Open Question
+                      </span>
+                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink">{t.gap}</p>
+                    </div>
+
+                    {/* Ask a human / Research it — the action, accent box */}
+                    <div
+                      className={`mt-2 rounded-[9px] px-3 py-2.5 transition-colors duration-300 ${
+                        isAsk
+                          ? "bg-accent-deep/[0.08] border-[0.5px] border-accent/30"
+                          : "hairline bg-surface/70"
+                      }`}
+                    >
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wide ${
+                          isAsk ? "bg-accent text-white" : "bg-ink/[0.06] text-ink-soft"
+                        }`}
+                      >
+                        {isAsk ? "🗣 Ask A Human" : "🔬 Research It"}
+                      </span>
+                      <p className={`mt-1.5 text-[12.5px] leading-relaxed ${isAsk ? "text-ink" : "text-ink-soft"}`}>
+                        {t.ask}
+                      </p>
+                    </div>
                   </motion.article>
                 );
               })}
@@ -281,27 +321,34 @@ export default function LiveBrief({
             >
               <Divider />
               <SectionHead kicker="Where To Dig Next" title="Deep-Research Targets" />
-              <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {(
                   [
-                    ["Key Players", brief.targets.key_players],
-                    ["Switched From", brief.targets.switched_from],
-                    ["Segments", brief.targets.segments],
-                    ["Pains To Mine", brief.targets.pains_to_mine],
+                    ["Key Players", brief.targets.key_players, true],
+                    ["Switched From", brief.targets.switched_from, false],
+                    ["Segments", brief.targets.segments, false],
+                    ["Pains To Mine", brief.targets.pains_to_mine, false],
                   ] as const
                 ).map(
-                  ([label, items]) =>
+                  ([label, items, accent]) =>
                     items.length > 0 && (
-                      <div key={label}>
-                        <p className="font-mono text-[10.5px] text-ink-faint mb-2">{label}</p>
-                        <ul className="flex flex-wrap gap-1.5">
+                      <Card key={label} className="p-4">
+                        <p className="text-[12px] font-semibold text-ink-soft mb-2.5">{label}</p>
+                        <ul className="flex flex-wrap gap-2">
                           {items.map((item) => (
-                            <li key={item}>
-                              <Badge>{item}</Badge>
+                            <li
+                              key={item}
+                              className={`rounded-full px-3 py-1 text-[13px] transition-colors duration-200 ${
+                                accent
+                                  ? "bg-accent-deep/[0.1] text-accent border-[0.5px] border-accent/25 hover:bg-accent-deep/[0.16]"
+                                  : "hairline text-ink hover:border-accent/50 hover:text-accent"
+                              }`}
+                            >
+                              {item}
                             </li>
                           ))}
                         </ul>
-                      </div>
+                      </Card>
                     ),
                 )}
               </div>

@@ -119,17 +119,23 @@ export default function Home() {
           className={`no-print max-w-2xl mx-auto text-center ${showBrief ? "pt-12 sm:pt-16 pb-10" : "pt-24 sm:pt-36 pb-16"}`}
         >
           {/* branding — big, center */}
-          <p className="text-[44px] sm:text-[56px] leading-none font-medium tracking-[-0.02em]">
-            scout
+          <p className="text-[52px] sm:text-[68px] leading-none font-semibold tracking-[-0.04em]">
+            Scout
           </p>
-          <p className="font-mono text-[11.5px] text-ink-soft mt-3">
-            0→1 product research
-          </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-[var(--color-hairline)]" />
+            <p className="font-mono text-[13px] sm:text-[14px] tracking-[0.12em] uppercase text-ink-soft">
+              <span className="text-accent font-semibold">0→1</span> product research
+            </p>
+            <span className="h-px w-8 bg-[var(--color-hairline)]" />
+          </div>
 
           <h1 className="mt-8 text-[17px] sm:text-[19px] font-normal text-ink-soft leading-relaxed max-w-[46ch] mx-auto">
-            Research what the market thinks — before you build it. Scout reads
-            the crowd live, finds the themes, maps the pain, and hands you the
-            brief.
+            Research what the market thinks — before you build it.
+            <span className="block mt-2">
+              Scout reads the crowd live, finds the themes, maps the pain, and
+              hands you the brief.
+            </span>
           </h1>
 
           <form onSubmit={runScout} className="mt-9 max-w-md mx-auto">
@@ -137,7 +143,7 @@ export default function Home() {
             <div
               role="tablist"
               aria-label="Research mode"
-              className="inline-flex hairline rounded-[10px] p-0.5 mb-3 font-mono text-[11px]"
+              className="inline-flex hairline rounded-[10px] p-0.5 mb-3 text-[12px] font-semibold"
             >
               {(["product", "industry"] as const).map((m) => (
                 <button
@@ -146,7 +152,7 @@ export default function Home() {
                   role="tab"
                   aria-selected={mode === m}
                   onClick={() => setMode(m)}
-                  className={`px-3.5 py-1 rounded-[8px] transition-colors duration-200 cursor-pointer ${
+                  className={`px-3.5 py-1 rounded-[8px] capitalize transition-colors duration-200 cursor-pointer ${
                     mode === m ? "bg-accent-deep text-ink" : "text-ink-soft hover:text-ink"
                   }`}
                 >

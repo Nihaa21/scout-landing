@@ -165,30 +165,40 @@ export default function CompetitiveBreakdown({
       {battle_table && battle_table.length > 0 && (
         <Reveal>
           <Label>Battle Table — How To Win Against Each</Label>
-          <Table className="min-w-[760px]">
-            <TableHeader>
-              <tr className="hairline-b">
-                <TableHead>Competitor</TableHead>
-                <TableHead>Really Serves</TableHead>
-                <TableHead>Pricing</TableHead>
-                <TableHead>Strength</TableHead>
-                <TableHead>Weakness</TableHead>
-                <TableHead>How To Win</TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              {battle_table.map((r) => (
-                <TableRow key={r.name}>
-                  <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
-                  <TableCell className="text-ink-soft">{r.segment}</TableCell>
-                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{r.pricing}</TableCell>
-                  <TableCell className="text-ink-soft">{r.strength}</TableCell>
-                  <TableCell className="text-ink-soft">{r.weakness}</TableCell>
-                  <TableCell className="text-accent pr-0">{r.how_to_win}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {battle_table.map((r) => (
+              <motion.div key={r.name} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+                <Card className="p-4 h-full hover:border-accent/40 break-inside-avoid">
+                  {/* name + pricing */}
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="text-[15px] font-semibold">{r.name}</h4>
+                    <span className="font-mono text-[11px] text-ink-soft whitespace-nowrap">{r.pricing}</span>
+                  </div>
+                  <p className="text-[11.5px] text-ink-faint mt-0.5">Serves {r.segment}</p>
+
+                  {/* strength / weakness */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="rounded-[8px] bg-pos/[0.08] px-2.5 py-2">
+                      <p className="font-mono text-[9px] uppercase tracking-wide text-pos mb-0.5">Strength</p>
+                      <p className="text-[12px] leading-snug text-ink">{r.strength}</p>
+                    </div>
+                    <div className="rounded-[8px] bg-neg/[0.08] px-2.5 py-2">
+                      <p className="font-mono text-[9px] uppercase tracking-wide text-neg mb-0.5">Weakness</p>
+                      <p className="text-[12px] leading-snug text-ink">{r.weakness}</p>
+                    </div>
+                  </div>
+
+                  {/* how to win — the punchline */}
+                  <div className="mt-2.5 rounded-[8px] bg-accent-deep/[0.08] border-[0.5px] border-accent/25 px-3 py-2.5">
+                    <p className="font-mono text-[9px] uppercase tracking-wide text-accent mb-1 flex items-center gap-1">
+                      ⚔ How To Win
+                    </p>
+                    <p className="text-[13px] leading-snug text-accent font-medium">{r.how_to_win}</p>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </Reveal>
       )}
 
@@ -220,35 +230,54 @@ export default function CompetitiveBreakdown({
       {strategy && (
         <Reveal>
           <Label>0→1 Strategy</Label>
-          <Card className="p-4 sm:p-5 space-y-3">
+          {/* beachhead / wedge / moat as three cards */}
+          <div className="grid gap-3 sm:grid-cols-3">
             {(
               [
-                ["Beachhead", strategy.beachhead],
-                ["Wedge", strategy.wedge],
-                ["Moat", strategy.moat],
+                ["Beachhead", strategy.beachhead, "Who to win first"],
+                ["Wedge", strategy.wedge, "How you get in"],
+                ["Moat", strategy.moat, "What compounds"],
               ] as const
-            ).map(([k, v]) => (
-              <p key={k} className="text-[13px] leading-relaxed">
-                <span className="font-mono text-[11px] text-accent mr-2">{k}</span>
-                {v}
-              </p>
+            ).map(([k, v, hint]) => (
+              <motion.div key={k} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+                <Card className="p-4 h-full hover:border-accent/40">
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-[14px] font-bold text-accent">{k}</p>
+                    <p className="font-mono text-[9px] text-ink-faint">{hint}</p>
+                  </div>
+                  <p className="text-[14px] leading-relaxed mt-2">{v}</p>
+                </Card>
+              </motion.div>
             ))}
-            {strategy.first_90_days?.length > 0 && (
-              <div className="hairline-t pt-3">
-                <p className="font-mono text-[11px] text-ink-faint mb-2">First 90 Days</p>
-                <ol className="space-y-1.5">
-                  {strategy.first_90_days.map((step, i) => (
-                    <li key={step} className="text-[12.5px] leading-relaxed flex gap-2.5">
-                      <span className="font-mono text-[11px] text-ink-faint shrink-0">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-          </Card>
+          </div>
+
+          {/* first 90 days — interactive timeline */}
+          {strategy.first_90_days?.length > 0 && (
+            <div className="mt-4">
+              <p className="font-mono text-[11px] text-ink-soft mb-3">First 90 Days</p>
+              <ol className="relative">
+                {strategy.first_90_days.map((step, i) => (
+                  <motion.li
+                    key={step}
+                    initial={{ opacity: 0, x: -8 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08, duration: 0.4, ease: EASE }}
+                    className="group flex gap-4 pb-4 last:pb-0 relative"
+                  >
+                    {/* connector line */}
+                    {i < strategy.first_90_days.length - 1 && (
+                      <span className="absolute left-[13px] top-7 bottom-0 w-px bg-[var(--color-hairline)]" />
+                    )}
+                    <span className="relative z-10 shrink-0 grid place-items-center size-[27px] rounded-full hairline bg-surface font-mono text-[11px] text-accent group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-colors duration-300">
+                      {i + 1}
+                    </span>
+                    <p className="text-[14px] leading-relaxed pt-1">{step}</p>
+                  </motion.li>
+                ))}
+              </ol>
+            </div>
+          )}
         </Reveal>
       )}
 
