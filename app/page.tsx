@@ -153,7 +153,7 @@ export default function Home() {
                   aria-selected={mode === m}
                   onClick={() => setMode(m)}
                   className={`px-3.5 py-1 rounded-[8px] capitalize transition-colors duration-200 cursor-pointer ${
-                    mode === m ? "bg-accent-deep text-ink" : "text-ink-soft hover:text-ink"
+                    mode === m ? "bg-accent text-white shadow-sm" : "text-ink-soft hover:text-ink"
                   }`}
                 >
                   {m}
