@@ -116,7 +116,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className={`max-w-2xl mx-auto text-center ${showBrief ? "pt-12 sm:pt-16 pb-10" : "pt-24 sm:pt-36 pb-16"}`}
+          className={`no-print max-w-2xl mx-auto text-center ${showBrief ? "pt-12 sm:pt-16 pb-10" : "pt-24 sm:pt-36 pb-16"}`}
         >
           {/* branding — big, center */}
           <p className="text-[44px] sm:text-[56px] leading-none font-medium tracking-[-0.02em]">
@@ -218,7 +218,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="hairline-t px-5 sm:px-8 py-4">
+      <footer className="no-print hairline-t px-5 sm:px-8 py-4">
         <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto text-center">
           scout · autonomous voice-of-customer research
         </p>

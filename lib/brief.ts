@@ -6,15 +6,17 @@
  * real fetch — nothing else on the page changes.
  */
 
-export type Sentiment = "positive" | "mixed" | "negative";
+export type Sentiment = "positive" | "mixed" | "negative" | "neutral";
 
 export interface Theme {
   title: string;
   sentiment: Sentiment;
   mentions: number;
+  sources: string[];
   quote: string;
   gap: string;
   ask: string;
+  gap_type: "researchable" | "ask_human";
 }
 
 export interface TeardownRow {
@@ -114,37 +116,45 @@ export const MOCK_BRIEF: Brief = {
       title: "Payment holds erode trust at the worst moment",
       sentiment: "negative",
       mentions: 9,
+      sources: ["app store"],
       quote:
         "They held an $8,000 payment for six days with no explanation. I had payroll due Friday.",
       gap: "How common are payout holds, and what actually triggers them?",
       ask: "Walk me through the last time a payout was delayed — what did it cost you that week?",
+      gap_type: "ask_human",
     },
     {
       title: "Tiered pricing reads as a paywall",
       sentiment: "mixed",
       mentions: 8,
+      sources: ["hacker news", "youtube"],
       quote:
         "Every feature I actually need lives one tier up. It feels engineered.",
       gap: "Which locked features drive upgrades vs. resentment?",
       ask: "If your plan price stayed the same but one feature moved down a tier, which one would change your week?",
+      gap_type: "ask_human",
     },
     {
       title: "Core scheduling is business-critical — and loved",
       sentiment: "positive",
       mentions: 28,
+      sources: ["youtube", "app store"],
       quote:
         "Jobber runs my entire day. If it went down, my business stops moving.",
       gap: "What would it take for an owner to switch away despite this?",
       ask: "What's the one thing Jobber does that you'd rebuild first if you had to leave tomorrow?",
+      gap_type: "researchable",
     },
     {
       title: "Competitor comparisons deflect prospects on YouTube",
       sentiment: "negative",
       mentions: 12,
+      sources: ["youtube"],
       quote:
         "Well, I'm glad I watched this video, because I was about to sign up with Jobber.",
       gap: "Which objections in comparison videos are factual vs. sponsored spin?",
       ask: "What did the comparison video claim that made you hesitate — and did you verify it?",
+      gap_type: "researchable",
     },
   ],
   teardown: [
@@ -385,7 +395,11 @@ function mapBrief(d: Record<string, unknown>, product: string): Brief {
     signals: (d.signals as number) ?? 0,
     sources: (d.sources as string[]) ?? [],
     oneThing: (d.one_thing as string) ?? "",
-    themes: (d.themes as Theme[]) ?? [],
+    themes: ((d.themes as Theme[]) ?? []).map((t) => ({
+      ...t,
+      sources: t.sources ?? [],
+      gap_type: t.gap_type ?? "researchable",
+    })),
     teardown: (d.teardown as TeardownRow[]) ?? [],
     interview: (d.interview as InterviewQ[]) ?? [],
     pains: (d.pains as Pain[]) ?? [],

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import CompetitiveBreakdown from "@/components/CompetitiveBreakdown";
+import DownloadPdf from "@/components/DownloadPdf";
 import PlatformLogo from "@/components/PlatformLogo";
 import Theater, { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
 import CountUp from "@/components/motion/CountUp";
@@ -13,10 +14,11 @@ import type { Brief, Sentiment } from "@/lib/brief";
 
 export type Phase = "scouting" | "done";
 
-const DOT: Record<Sentiment, string> = {
-  positive: "bg-pos",
-  mixed: "bg-mid",
-  negative: "bg-neg",
+const SENTIMENT: Record<Sentiment, { emoji: string; color: string }> = {
+  positive: { emoji: "🟢", color: "text-pos" },
+  mixed: { emoji: "🟡", color: "text-mid" },
+  negative: { emoji: "🔴", color: "text-neg" },
+  neutral: { emoji: "⚪", color: "text-ink-soft" },
 };
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -106,21 +108,24 @@ export default function LiveBrief({
   return (
     <section
       aria-label={`Research brief for ${product}`}
-      className="hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
+      className="print-root hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
     >
       {/* header */}
-      <header className="hairline-b flex items-baseline justify-between gap-4 px-6 py-4 sm:px-8 bg-surface/80">
+      <header className="hairline-b flex items-center justify-between gap-4 px-6 py-4 sm:px-8 bg-surface/80">
         <h2 className="text-[16px] font-semibold">{product}</h2>
-        <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap shrink-0">
-          {phase === "scouting" ? (
-            <span className="text-accent breathe">{signals ? `${signals} signals…` : "scouting…"}</span>
-          ) : (
-            <>
-              <span aria-hidden="true" className="inline-block size-[6px] rounded-full bg-accent" />
-              Live · {brief!.signals} Signals
-            </>
-          )}
-        </p>
+        <div className="flex items-center gap-4 shrink-0">
+          <p className="font-mono text-[11px] text-ink-soft flex items-center gap-1.5 whitespace-nowrap">
+            {phase === "scouting" ? (
+              <span className="text-accent breathe">{signals ? `${signals} signals…` : "scouting…"}</span>
+            ) : (
+              <>
+                <span aria-hidden="true" className="inline-block size-[6px] rounded-full bg-accent" />
+                Live · {brief!.signals} Signals
+              </>
+            )}
+          </p>
+          {phase !== "scouting" && brief && <DownloadPdf />}
+        </div>
       </header>
 
       {phase === "scouting" || !brief ? (
@@ -179,40 +184,49 @@ export default function LiveBrief({
             <motion.div variants={riseIn}>
               <SectionHead kicker="What The Crowd Says" title="Themes" sub="Ranked by frequency × severity" />
             </motion.div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {brief.themes.map((t) => (
-                <motion.article
-                  key={t.title}
-                  variants={riseIn}
-                  whileHover={{ y: -3 }}
-                  transition={{ duration: 0.25, ease: EASE }}
-                  className="hairline rounded-[12px] p-4 bg-surface/60 group hover:border-accent/50 transition-colors duration-300"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-[14px] font-semibold leading-snug flex items-baseline gap-2">
-                      <span aria-hidden="true" className={`inline-block size-2 rounded-full shrink-0 translate-y-[-1px] ${DOT[t.sentiment]}`} />
-                      <span className="sr-only">{t.sentiment} theme:</span>
-                      {t.title}
-                    </h3>
-                    <span className="font-mono text-[11px] text-ink-faint whitespace-nowrap group-hover:text-accent transition-colors duration-300">
-                      ×{t.mentions}
-                    </span>
-                  </div>
-                  <blockquote className="hairline-l mt-3 pl-3 font-serif italic text-[13px] text-ink-soft leading-relaxed">
-                    “{t.quote}”
-                  </blockquote>
-                  <div className="mt-3 space-y-1.5 text-[12.5px] leading-relaxed hairline-t pt-3">
-                    <p>
-                      <span className="font-mono text-[10px] text-ink-faint mr-1.5">Gap</span>
-                      {t.gap}
+            <div className="grid gap-3.5 md:grid-cols-2">
+              {brief.themes.map((t) => {
+                const s = SENTIMENT[t.sentiment] ?? SENTIMENT.neutral;
+                const isAsk = t.gap_type === "ask_human";
+                return (
+                  <motion.article
+                    key={t.title}
+                    variants={riseIn}
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.25, ease: EASE }}
+                    className="hairline rounded-[12px] p-5 bg-surface/60 hover:border-accent/50 transition-colors duration-300 break-inside-avoid"
+                  >
+                    <h3 className="text-[15px] font-semibold leading-snug">{t.title}</h3>
+                    <p className="mt-2 font-mono text-[11px] text-ink-soft flex flex-wrap items-center gap-x-2">
+                      <span>
+                        <span aria-hidden="true">{s.emoji}</span>{" "}
+                        <span className={s.color}>{t.sentiment}</span>
+                      </span>
+                      <span className="text-ink-faint">·</span>
+                      <span>{t.mentions} mentions</span>
+                      {t.sources.length > 0 && (
+                        <>
+                          <span className="text-ink-faint">·</span>
+                          <span className="text-ink-faint">{t.sources.join(", ")}</span>
+                        </>
+                      )}
                     </p>
-                    <p className="text-accent">
-                      <span className="font-mono text-[10px] text-ink-faint mr-1.5">Ask</span>
-                      {t.ask}
+                    <blockquote className="hairline-l mt-3 pl-3 font-serif italic text-[13.5px] text-ink-soft leading-relaxed">
+                      “{t.quote}”
+                    </blockquote>
+                    <p className="mt-3.5 text-[12.5px] leading-relaxed">
+                      <span className="font-semibold">Open question:</span>{" "}
+                      <span className="text-ink-soft">{t.gap}</span>
                     </p>
-                  </div>
-                </motion.article>
-              ))}
+                    <p className="mt-2 text-[12.5px] leading-relaxed">
+                      <span className={`font-semibold ${isAsk ? "text-accent" : "text-ink"}`}>
+                        {isAsk ? "🗣 Ask a human:" : "🔬 Research it:"}
+                      </span>{" "}
+                      <span className={isAsk ? "text-accent" : "text-ink-soft"}>{t.ask}</span>
+                    </p>
+                  </motion.article>
+                );
+              })}
             </div>
           </motion.div>
 

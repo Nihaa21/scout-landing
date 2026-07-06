@@ -51,7 +51,7 @@ export default function GalaxyBackground() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
+      className="no-print pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
     >
       <svg
         className="drift absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2"
