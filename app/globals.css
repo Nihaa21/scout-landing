@@ -17,9 +17,9 @@
   --color-mid: #d9a431;
   --color-neg: #e06b5d;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
 
   --radius-card: 12px;
 }

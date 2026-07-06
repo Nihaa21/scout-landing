@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import CompetitiveBreakdown from "@/components/CompetitiveBreakdown";
 import Theater, { type SourceStatus, type TheaterStage } from "@/components/Theater";
 import CountUp from "@/components/motion/CountUp";
-import Typewriter from "@/components/motion/Typewriter";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Brief, Sentiment } from "@/lib/brief";
@@ -79,10 +77,6 @@ export default function LiveBrief({
   elapsed?: number;
   live?: boolean;
 }) {
-  // Assembly gate: theme grid waits for "the one thing" to finish typing.
-  const [typed, setTyped] = useState(false);
-  useEffect(() => setTyped(false), [brief.oneThing]);
-
   const kpis: [string, number][] = [
     ["signals read", brief.signals],
     ["themes found", brief.themes.length],
@@ -160,25 +154,24 @@ export default function LiveBrief({
             ))}
           </motion.div>
 
-          {/* the one thing — types itself in */}
-          <div className="mt-10">
+          {/* the one thing — highlighted feature block, fades in */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.35, ease: EASE }}
+            className="mt-10 hairline rounded-[12px] bg-accent-deep/10 border-l-2 border-l-accent p-5 sm:p-7"
+          >
             <SectionLabel accent>the one thing</SectionLabel>
-            <p className="text-[24px] sm:text-[28px] leading-snug font-normal max-w-[44ch] min-h-[2.4em]">
-              <Typewriter
-                key={brief.oneThing}
-                text={brief.oneThing}
-                delay={500}
-                speed={16}
-                onDone={() => setTyped(true)}
-              />
+            <p className="text-[24px] sm:text-[30px] leading-snug font-medium tracking-[-0.01em] text-balance max-w-[44ch]">
+              {brief.oneThing}
             </p>
-          </div>
+          </motion.div>
 
-          {/* main grid: themes + rail — assembles after the one thing lands */}
+          {/* main grid: themes + rail */}
           <motion.div
             variants={stagger}
             initial="hidden"
-            animate={typed ? "show" : "hidden"}
+            animate="show"
             className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]"
           >
             <div>
@@ -290,9 +283,9 @@ export default function LiveBrief({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, ease: EASE }}
-              className="mt-12"
+              className="mt-8"
             >
-              <div className="hairline-t pt-6">
+              <div className="hairline rounded-[12px] bg-surface/40 p-5 sm:p-6">
                 <SectionLabel accent>pain map — who hurts, when, and what it costs</SectionLabel>
                 <div className="grid gap-3 lg:grid-cols-2">
                   {brief.pains.map((p) => (
@@ -324,9 +317,9 @@ export default function LiveBrief({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.6, ease: EASE }}
-            className="mt-12"
+            className="mt-8"
           >
-            <div className="hairline-t pt-6">
+            <div className="hairline rounded-[12px] bg-surface/40 p-5 sm:p-6">
               <SectionLabel accent>competitive breakdown</SectionLabel>
               <CompetitiveBreakdown competitive={brief.competitive} teardown={brief.teardown} />
             </div>
