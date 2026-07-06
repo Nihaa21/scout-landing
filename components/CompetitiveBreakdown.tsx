@@ -15,7 +15,7 @@ import type { Competitive, TeardownRow } from "@/lib/brief";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[11px] text-ink-soft mb-3">{children}</p>;
+  return <p className="text-[15px] font-semibold tracking-[-0.01em] mb-3">{children}</p>;
 }
 
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -149,13 +149,13 @@ export default function CompetitiveBreakdown({
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start">
           {positioning && positioning.players?.length > 0 && (
             <Reveal>
-              <Label>positioning map</Label>
+              <Label>Positioning Map</Label>
               <PositioningMap p={positioning} />
             </Reveal>
           )}
           {five_forces && five_forces.length > 0 && (
             <Reveal delay={0.1}>
-              <Label>five forces</Label>
+              <Label>Five Forces</Label>
               <FiveForces forces={five_forces} />
             </Reveal>
           )}
@@ -164,16 +164,16 @@ export default function CompetitiveBreakdown({
 
       {battle_table && battle_table.length > 0 && (
         <Reveal>
-          <Label>battle table — how to win against each</Label>
+          <Label>Battle Table — How To Win Against Each</Label>
           <Table className="min-w-[760px]">
             <TableHeader>
               <tr className="hairline-b">
-                <TableHead>competitor</TableHead>
-                <TableHead>really serves</TableHead>
-                <TableHead>pricing</TableHead>
-                <TableHead>strength</TableHead>
-                <TableHead>weakness</TableHead>
-                <TableHead>how to win</TableHead>
+                <TableHead>Competitor</TableHead>
+                <TableHead>Really Serves</TableHead>
+                <TableHead>Pricing</TableHead>
+                <TableHead>Strength</TableHead>
+                <TableHead>Weakness</TableHead>
+                <TableHead>How To Win</TableHead>
               </tr>
             </TableHeader>
             <TableBody>
@@ -194,7 +194,7 @@ export default function CompetitiveBreakdown({
 
       {whitespace && whitespace.length > 0 && (
         <Reveal>
-          <Label>whitespace — underserved gaps</Label>
+          <Label>Whitespace — Underserved Gaps</Label>
           <div className="grid gap-3 sm:grid-cols-3">
             {whitespace.map((w, i) => (
               <motion.div key={w.opportunity} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
@@ -204,7 +204,7 @@ export default function CompetitiveBreakdown({
                   </p>
                   <p className="text-[13.5px] font-medium leading-snug">{w.opportunity}</p>
                   <p className="text-[12px] text-ink-soft mt-2 leading-relaxed">
-                    <span className="font-mono text-[10px] text-ink-faint mr-1">why now</span>
+                    <span className="font-mono text-[10px] text-ink-faint mr-1">Why Now</span>
                     {w.why_now}
                   </p>
                   <p className="font-serif italic text-[12px] text-ink-soft mt-2 leading-relaxed">
@@ -219,13 +219,13 @@ export default function CompetitiveBreakdown({
 
       {strategy && (
         <Reveal>
-          <Label>0→1 strategy</Label>
+          <Label>0→1 Strategy</Label>
           <Card className="p-4 sm:p-5 space-y-3">
             {(
               [
-                ["beachhead", strategy.beachhead],
-                ["wedge", strategy.wedge],
-                ["moat", strategy.moat],
+                ["Beachhead", strategy.beachhead],
+                ["Wedge", strategy.wedge],
+                ["Moat", strategy.moat],
               ] as const
             ).map(([k, v]) => (
               <p key={k} className="text-[13px] leading-relaxed">
@@ -235,7 +235,7 @@ export default function CompetitiveBreakdown({
             ))}
             {strategy.first_90_days?.length > 0 && (
               <div className="hairline-t pt-3">
-                <p className="font-mono text-[11px] text-ink-faint mb-2">first 90 days</p>
+                <p className="font-mono text-[11px] text-ink-faint mb-2">First 90 Days</p>
                 <ol className="space-y-1.5">
                   {strategy.first_90_days.map((step, i) => (
                     <li key={step} className="text-[12.5px] leading-relaxed flex gap-2.5">
@@ -254,14 +254,14 @@ export default function CompetitiveBreakdown({
 
       {teardown.length > 0 && (
         <Reveal>
-          <Label>scraped facts — G2 · Capterra · pricing pages</Label>
+          <Label>Scraped Facts — G2 · Capterra · Pricing Pages</Label>
           <Table>
             <TableHeader>
               <tr className="hairline-b">
-                <TableHead>competitor</TableHead>
-                <TableHead>pricing</TableHead>
-                <TableHead>rating</TableHead>
-                <TableHead>top complaint</TableHead>
+                <TableHead>Competitor</TableHead>
+                <TableHead>Pricing</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Top Complaint</TableHead>
               </tr>
             </TableHeader>
             <TableBody>

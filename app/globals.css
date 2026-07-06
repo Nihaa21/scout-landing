@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-/* ── Scout design tokens — DARK instrument ───────────────────────────
-   Warm near-black paper, soft warm-white ink, ONE muted electric-blue
-   accent. Hairlines, no gradients, no glow-spam. Two weights (400/500). */
+/* ── Scout design tokens — LIGHT instrument ──────────────────────────
+   Warm paper, near-black ink, ONE muted electric-blue accent, hairlines.
+   A faint wire/constellation web sits behind everything (GalaxyBackground). */
 @theme {
-  --color-paper: #131211;
-  --color-surface: #1a1918;
-  --color-ink: #e9e6e0;
-  --color-ink-soft: #a6a29a;
-  --color-ink-faint: #6e6a63;
-  --color-hairline: rgba(233, 230, 224, 0.13);
-  --color-accent: #4d9fe8;
+  --color-paper: #fbfaf6;
+  --color-surface: #ffffff;
+  --color-ink: #1a1916;
+  --color-ink-soft: #57544d;
+  --color-ink-faint: #9b968c;
+  --color-hairline: rgba(26, 25, 22, 0.14);
+  --color-accent: #1f6fbf;
   --color-accent-deep: #185fa5;
-  --color-accent-bright: #6fb2ee;
-  --color-pos: #57b87a;
-  --color-mid: #d9a431;
-  --color-neg: #e06b5d;
+  --color-accent-bright: #378add;
+  --color-pos: #2f8a52;
+  --color-mid: #b5851f;
+  --color-neg: #c0483b;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
@@ -24,7 +24,7 @@
   --radius-card: 12px;
 }
 
-/* shadcn/ui variable bridge — components speak these names */
+/* shadcn/ui variable bridge */
 :root {
   --background: var(--color-paper);
   --foreground: var(--color-ink);
@@ -33,7 +33,7 @@
   --popover: var(--color-surface);
   --popover-foreground: var(--color-ink);
   --primary: var(--color-accent);
-  --primary-foreground: #0d1620;
+  --primary-foreground: #ffffff;
   --secondary: var(--color-surface);
   --secondary-foreground: var(--color-ink);
   --muted: var(--color-surface);
@@ -65,7 +65,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -76,7 +76,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Hairline borders — true 0.5px on retina */
+/* Hairlines */
 .hairline {
   border: 0.5px solid var(--color-hairline);
 }
@@ -90,18 +90,18 @@ body {
   border-left: 0.5px solid var(--color-hairline);
 }
 
-/* Scouting status — a slow breathe, not a flash */
+/* Scouting status — slow breathe */
 @keyframes breathe {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.45;
   }
   50% {
     opacity: 1;
   }
 }
 .breathe {
-  animation: breathe 1.5s ease-in-out infinite;
+  animation: breathe 1.6s ease-in-out infinite;
 }
 
 /* Scanning line for the theater's active platform row */
@@ -132,7 +132,23 @@ body {
   animation: caret 0.9s step-end infinite;
 }
 
+/* Very slow drift for the background web */
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-14px, -10px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+.drift {
+  animation: drift 34s ease-in-out infinite;
+}
+
 ::selection {
-  background: var(--color-accent-deep);
+  background: rgba(31, 111, 191, 0.18);
   color: var(--color-ink);
 }
