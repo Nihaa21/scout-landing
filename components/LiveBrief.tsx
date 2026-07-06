@@ -136,8 +136,8 @@ export default function LiveBrief({
           ) : (
             <span className="inline-flex items-center gap-2 rounded-full bg-accent-deep/10 px-4 py-1.5">
               <span aria-hidden="true" className="relative flex size-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 breathe" />
-                <span className="relative inline-flex size-2 rounded-full bg-accent" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent ping-ring" />
+                <span className="relative inline-flex size-2 rounded-full bg-accent blink" />
               </span>
               <span className="font-mono text-[12px] text-ink-soft">Live</span>
               <span className="font-mono text-[12px] text-ink-faint">·</span>
@@ -172,8 +172,8 @@ export default function LiveBrief({
                   transition={{ delay: i * 0.1, duration: 0.4, ease: EASE }}
                   className="flex items-center gap-1.5 text-[12.5px] text-ink"
                 >
-                  <PlatformLogo name={label} className="size-[16px] text-accent" />
-                  {label}
+                  <PlatformLogo name={label} colored className="size-[16px]" />
+                  {label.replace(/\b\w/g, (c) => c.toUpperCase())}
                 </motion.span>
               );
             })}

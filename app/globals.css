@@ -132,6 +132,78 @@ body {
   animation: caret 0.9s step-end infinite;
 }
 
+/* Live indicator — a hard blink plus an expanding ping ring */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+.blink {
+  animation: blink 1s steps(1, end) infinite;
+}
+@keyframes ping-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.ping-ring {
+  animation: ping-ring 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Theater active row — soft accent glow that breathes */
+@keyframes rowGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(31, 111, 191, 0);
+    background-color: rgba(31, 111, 191, 0.03);
+  }
+  50% {
+    box-shadow: 0 0 22px -6px rgba(31, 111, 191, 0.35);
+    background-color: rgba(31, 111, 191, 0.07);
+  }
+}
+.row-glow {
+  animation: rowGlow 2s ease-in-out infinite;
+}
+
+/* Background — radar scan pulse for the VoC/Scout motifs */
+@keyframes radar {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.radar-ring {
+  transform-origin: center;
+  animation: radar 5s ease-out infinite;
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+.floaty {
+  animation: floaty 9s ease-in-out infinite;
+}
+
 /* Very slow drift for the background web */
 @keyframes drift {
   0% {

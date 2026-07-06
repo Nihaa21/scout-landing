@@ -21,6 +21,11 @@ const CANDIDATES = ["hacker news", "youtube", "app store", "bluesky", "open web"
 export const prettySource = (s: string): string =>
   ({ hackernews: "hacker news", appstore: "app store", web: "open web" } as Record<string, string>)[s] ?? s;
 
+/* "hacker news" → "Hacker News" (display only; logic keys stay lowercase). */
+const titleCase = (s: string): string => s.replace(/\b\w/g, (c) => c.toUpperCase());
+
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 const STAGE_COPY: Record<TheaterStage, [string, string]> = {
   routing: ["Routing Sources", "Deciding where the signal lives for this subject"],
   gathering: ["Reading The Crowd", "Every selected platform, scraped in parallel"],
@@ -36,45 +41,85 @@ function Row({ name, status }: { name: string; status: SourceStatus }) {
       ? "text-ink"
       : s === "active"
         ? "text-accent"
-        : s === "skipped"
-          ? "text-ink-faint"
-          : "text-ink-faint";
+        : "text-ink-faint";
   return (
     <motion.li
       layout
       initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: s === "skipped" ? 0.4 : 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      animate={{ opacity: s === "skipped" ? 0.35 : 1, y: 0 }}
+      transition={{ duration: 0.4, ease: EASE }}
       className="relative"
     >
-      <div className="flex items-center justify-between gap-6 py-3">
-        <span className={`flex items-center gap-3 transition-colors duration-500 ${color}`}>
-          <PlatformLogo name={name} className="size-[22px] sm:size-[24px] shrink-0" />
+      <div
+        className={`flex items-center justify-between gap-6 rounded-[11px] px-3 py-2.5 my-0.5 transition-all duration-500 ${
+          s === "active" ? "row-glow hairline border-accent/30" : "border-[0.5px] border-transparent"
+        }`}
+      >
+        <span className={`flex items-center gap-3.5 transition-colors duration-500 ${color}`}>
+          {/* logo — colorful, with a pulsing halo while active */}
+          <span className="relative grid place-items-center shrink-0 size-[26px] sm:size-[28px]">
+            {s === "active" && (
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-0 rounded-full bg-accent/15"
+                animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+              />
+            )}
+            <motion.span
+              animate={s === "active" ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+              transition={{ duration: 1.6, repeat: s === "active" ? Infinity : 0, ease: "easeInOut" }}
+              className={`grid place-items-center ${s === "pending" ? "opacity-45 saturate-0" : ""} ${
+                s === "skipped" ? "opacity-40 saturate-0" : ""
+              }`}
+            >
+              <PlatformLogo name={name} colored className="size-[22px] sm:size-[24px]" />
+            </motion.span>
+          </span>
           <span
-            className={`text-[19px] sm:text-[23px] ${
+            className={`text-[19px] sm:text-[23px] font-medium tracking-[-0.01em] ${
               s === "skipped" ? "line-through decoration-[0.5px]" : ""
             }`}
           >
-            {name}
+            {titleCase(name)}
           </span>
         </span>
         <span className="font-mono text-[12px] whitespace-nowrap">
           {s === "done" && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-ink-soft">
-              <span className="text-accent mr-1.5">✓</span>
-              {status.count != null ? `${status.count} signals` : "read"}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="inline-flex items-center gap-1.5 text-ink-soft"
+            >
+              <span className="grid place-items-center size-[16px] rounded-full bg-pos/15 text-pos text-[10px]">✓</span>
+              {status.count != null ? (
+                <span className="text-accent font-semibold tabular-nums">{status.count}</span>
+              ) : null}
+              {status.count != null ? " signals" : "read"}
             </motion.span>
           )}
-          {s === "active" && <span className="text-accent breathe">reading…</span>}
+          {s === "active" && (
+            <span className="text-accent">
+              reading
+              <motion.span
+                aria-hidden="true"
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              >
+                …
+              </motion.span>
+            </span>
+          )}
           {s === "skipped" && <span className="text-ink-faint">skipped</span>}
-          {s === "pending" && <span className="text-ink-faint">·</span>}
+          {s === "pending" && <span className="text-ink-faint">queued</span>}
         </span>
       </div>
-      <div className="hairline-b relative overflow-hidden">
-        {s === "active" && (
-          <span aria-hidden="true" className="scanline absolute bottom-[-0.5px] left-0 h-[1px] w-1/4 bg-accent" />
-        )}
-      </div>
+      {s === "active" && (
+        <div className="mx-3 relative h-[1.5px] overflow-hidden rounded-full bg-accent/10">
+          <span aria-hidden="true" className="scanline absolute inset-y-0 left-0 w-1/3 rounded-full bg-accent" />
+        </div>
+      )}
     </motion.li>
   );
 }
