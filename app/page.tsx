@@ -124,8 +124,8 @@ export default function Home() {
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-[var(--color-hairline)]" />
-            <p className="font-mono text-[13px] sm:text-[14px] tracking-[0.12em] uppercase text-ink-soft">
-              <span className="text-accent font-semibold">0→1</span> product research
+            <p className="font-mono text-[13px] sm:text-[14px] tracking-[0.12em] uppercase text-accent">
+              <span className="font-semibold">0→1</span> product research
             </p>
             <span className="h-px w-8 bg-[var(--color-hairline)]" />
           </div>
@@ -182,7 +182,7 @@ export default function Home() {
             {/* suggestions — not dummy data, just one-tap starts */}
             {!showBrief && (
               <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
-                <span className="font-mono text-[10.5px] text-ink-faint">try</span>
+                <span className="font-mono text-[10.5px] font-semibold text-ink-soft">Try</span>
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s.label}
@@ -226,7 +226,7 @@ export default function Home() {
 
       <footer className="no-print hairline-t px-5 sm:px-8 py-4">
         <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto text-center">
-          scout · autonomous voice-of-customer research
+          Scout · Autonomous Voice-of-Customer Research
         </p>
       </footer>
     </div>

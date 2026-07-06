@@ -37,23 +37,31 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
         aria-label={`Positioning map: ${p.x_axis.label} vs ${p.y_axis.label}`}
         className="w-full h-auto"
       >
+        {/* quadrant tints — top-right (high/high) glows, bottom-left recedes */}
+        <rect x={W / 2} y={M} width={(W - 2 * M) / 2} height={(H - 2 * M) / 2}
+          fill="var(--color-accent)" opacity="0.05" />
+        <rect x={M} y={H / 2} width={(W - 2 * M) / 2} height={(H - 2 * M) / 2}
+          fill="var(--color-ink)" opacity="0.025" />
+
         <rect x={M} y={M} width={W - 2 * M} height={H - 2 * M} fill="none"
           stroke="var(--color-hairline)" strokeWidth="1" />
-        <line x1={W / 2} y1={M} x2={W / 2} y2={H - M} stroke="var(--color-hairline)" strokeWidth="1" />
-        <line x1={M} y1={H / 2} x2={W - M} y2={H / 2} stroke="var(--color-hairline)" strokeWidth="1" />
+        <line x1={W / 2} y1={M} x2={W / 2} y2={H - M} stroke="var(--color-ink-faint)"
+          strokeWidth="1" strokeDasharray="3 5" opacity="0.55" />
+        <line x1={M} y1={H / 2} x2={W - M} y2={H / 2} stroke="var(--color-ink-faint)"
+          strokeWidth="1" strokeDasharray="3 5" opacity="0.55" />
 
-        <text x={W / 2} y={H - 10} textAnchor="middle" fontSize="11"
+        <text x={W / 2} y={H - 10} textAnchor="middle" fontSize="11.5" fontWeight="700"
           fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.x_axis.label}</text>
-        <text x={M} y={H - M + 16} textAnchor="start" fontSize="10"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-faint)">← {p.x_axis.low}</text>
-        <text x={W - M} y={H - M + 16} textAnchor="end" fontSize="10"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-faint)">{p.x_axis.high} →</text>
-        <text x={14} y={H / 2} textAnchor="middle" fontSize="11" fontFamily="var(--font-mono)"
+        <text x={M} y={H - M + 16} textAnchor="start" fontSize="10" fontWeight="600"
+          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">← {p.x_axis.low}</text>
+        <text x={W - M} y={H - M + 16} textAnchor="end" fontSize="10" fontWeight="600"
+          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.x_axis.high} →</text>
+        <text x={14} y={H / 2} textAnchor="middle" fontSize="11.5" fontWeight="700" fontFamily="var(--font-mono)"
           fill="var(--color-ink-soft)" transform={`rotate(-90 14 ${H / 2})`}>{p.y_axis.label}</text>
-        <text x={M - 6} y={M + 4} textAnchor="end" fontSize="10"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-faint)">{p.y_axis.high}</text>
-        <text x={M - 6} y={H - M} textAnchor="end" fontSize="10"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-faint)">{p.y_axis.low}</text>
+        <text x={M - 6} y={M + 4} textAnchor="end" fontSize="10" fontWeight="600"
+          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.y_axis.high}</text>
+        <text x={M - 6} y={H - M} textAnchor="end" fontSize="10" fontWeight="600"
+          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.y_axis.low}</text>
 
         {p.players.map((pl, i) => (
           <motion.g
@@ -67,19 +75,31 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
           >
             <title>{`${pl.name} — ${pl.note}`}</title>
             {pl.is_subject && (
-              <circle cx={px(pl.x)} cy={py(pl.y)} r={13}
-                fill="var(--color-accent)" opacity="0.15" />
+              <>
+                <circle cx={px(pl.x)} cy={py(pl.y)} r={16}
+                  fill="var(--color-accent)" opacity="0.1" />
+                <circle cx={px(pl.x)} cy={py(pl.y)} r={11} fill="none"
+                  stroke="var(--color-accent)" strokeWidth="1" opacity="0.45" />
+              </>
             )}
             <circle
-              cx={px(pl.x)} cy={py(pl.y)} r={pl.is_subject ? 7 : 5}
-              fill={pl.is_subject ? "var(--color-accent)" : "var(--color-paper)"}
-              stroke={pl.is_subject ? "var(--color-accent)" : "var(--color-ink-soft)"}
-              strokeWidth={pl.is_subject ? 0 : 1.5}
+              cx={px(pl.x)} cy={py(pl.y)} r={pl.is_subject ? 7 : 5.5}
+              fill={pl.is_subject ? "var(--color-accent)" : "var(--color-surface)"}
+              stroke={pl.is_subject ? "var(--color-accent)" : "var(--color-accent-deep)"}
+              strokeWidth={pl.is_subject ? 0 : 1.6}
             />
+            {/* paper halo so bold names stay legible over grid lines */}
             <text
-              x={px(pl.x) + 10} y={py(pl.y) + 4} fontSize="12"
-              fontFamily="var(--font-sans)"
-              fontWeight={pl.is_subject ? 500 : 400}
+              x={px(pl.x) + 11} y={py(pl.y) + 4.5} fontSize="12.5"
+              fontFamily="var(--font-sans)" fontWeight="700"
+              stroke="var(--color-surface)" strokeWidth="3.5" strokeLinejoin="round"
+              opacity="0.9"
+            >
+              {pl.name}
+            </text>
+            <text
+              x={px(pl.x) + 11} y={py(pl.y) + 4.5} fontSize="12.5"
+              fontFamily="var(--font-sans)" fontWeight="700"
               fill={pl.is_subject ? "var(--color-accent)" : "var(--color-ink)"}
             >
               {pl.name}
@@ -99,7 +119,7 @@ function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]
       {forces.map((f, fi) => (
         <div key={f.force} className="hairline-b pb-4 last:border-b-0 last:pb-0">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[12.5px] font-medium">{f.force}</p>
+            <p className="text-[13px] font-semibold">{f.force}</p>
             <div className="flex items-center gap-1 shrink-0"
               aria-label={`${f.score} out of 10 — ${f.level}`}>
               {Array.from({ length: 10 }).map((_, i) => (
@@ -112,7 +132,7 @@ function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]
                   className={`h-[3px] w-2.5 rounded-full origin-left ${i < f.score ? "bg-accent" : "bg-ink/15"}`}
                 />
               ))}
-              <span className="font-mono text-[10px] text-ink-faint ml-1.5">{f.level}</span>
+              <span className="font-mono text-[10px] font-semibold text-accent ml-1.5">{f.level}</span>
             </div>
           </div>
           <p className="text-[12px] text-ink-soft leading-relaxed mt-1.5">{f.insight}</p>
@@ -206,7 +226,9 @@ export default function CompetitiveBreakdown({
                   </p>
                   <p className="text-[13.5px] font-medium leading-snug">{w.opportunity}</p>
                   <p className="text-[12px] text-ink-soft mt-2 leading-relaxed">
-                    <span className="font-mono text-[10px] text-ink-faint mr-1">Why Now</span>
+                    <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wide text-accent mr-1.5">
+                      Why Now
+                    </span>
                     {w.why_now}
                   </p>
                   <p className="font-serif italic text-[12px] text-ink-soft mt-2 leading-relaxed">
@@ -246,7 +268,7 @@ export default function CompetitiveBreakdown({
           {/* first 90 days — interactive timeline */}
           {strategy.first_90_days?.length > 0 && (
             <div className="mt-4">
-              <p className="font-mono text-[11px] text-ink-soft mb-3">First 90 Days</p>
+              <p className="text-[14px] font-semibold tracking-[-0.01em] mb-3">First 90 Days</p>
               <ol className="relative">
                 {strategy.first_90_days.map((step, i) => (
                   <motion.li

@@ -163,7 +163,7 @@ export default function LiveBrief({
             transition={{ duration: 0.5 }}
             className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-8"
           >
-            <span className="font-mono text-[11px] text-ink-faint">Read From</span>
+            <span className="font-mono text-[11px] font-semibold text-ink-soft">Read From</span>
             {brief.sources.map((s, i) => {
               const label = prettySource(s);
               return (
@@ -189,7 +189,7 @@ export default function LiveBrief({
                   <p className="text-[28px] leading-none font-bold tabular-nums">
                     <CountUp value={value} delay={0.3 + i * 0.12} />
                   </p>
-                  <p className="font-mono text-[10px] text-ink-faint mt-2">{label}</p>
+                  <p className="font-mono text-[10.5px] font-semibold text-ink-soft mt-2">{label}</p>
                 </Card>
               </motion.div>
             ))}
@@ -364,7 +364,7 @@ export default function LiveBrief({
                   <motion.div key={p.pain} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
                     <Card className="p-5 h-full hover:border-neg/40">
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[14px] font-semibold">{p.pain}</h3>
+                        <h3 className="text-[15px] font-semibold">{p.pain}</h3>
                         <Severity n={p.severity} />
                       </div>
                       <p className="text-[12.5px] text-ink-soft leading-relaxed mt-2.5">{p.detail}</p>
