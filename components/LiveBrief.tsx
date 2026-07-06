@@ -41,6 +41,35 @@ function SectionLabel({
   );
 }
 
+/** Distinct, highlighted panel for each result phase. */
+function Section({
+  label,
+  index,
+  children,
+}: {
+  label: string;
+  index?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, ease: EASE }}
+      className="mt-8 hairline rounded-[12px] bg-surface/40 p-5 sm:p-6"
+    >
+      <div className="flex items-baseline gap-2 mb-4 hairline-b pb-3">
+        {index && (
+          <span className="font-mono text-[10px] text-ink-faint tabular-nums">{index}</span>
+        )}
+        <p className="font-mono text-[11px] text-accent">{label}</p>
+      </div>
+      {children}
+    </motion.section>
+  );
+}
+
 function Severity({ n }: { n: number }) {
   return (
     <span className="inline-flex items-center gap-[3px]" aria-label={`severity ${n} of 5`}>
