@@ -24,6 +24,64 @@ export interface TeardownRow {
   complaint: string;
 }
 
+export interface InterviewQ {
+  title: string;
+  question: string;
+}
+
+export interface Targets {
+  key_players: string[];
+  switched_from: string[];
+  segments: string[];
+  pains_to_mine: string[];
+}
+
+/* ── competitive breakdown (the MBA layer) ── */
+export interface MapPlayer {
+  name: string;
+  x: number; // 0-100
+  y: number; // 0-100
+  is_subject: boolean;
+  note: string;
+}
+export interface Positioning {
+  x_axis: { label: string; low: string; high: string };
+  y_axis: { label: string; low: string; high: string };
+  players: MapPlayer[];
+}
+export interface Force {
+  force: string;
+  score: number; // 1-10
+  level: string;
+  insight: string;
+}
+export interface BattleRow {
+  name: string;
+  segment: string;
+  pricing: string;
+  strength: string;
+  weakness: string;
+  how_to_win: string;
+}
+export interface Whitespace {
+  opportunity: string;
+  why_now: string;
+  evidence: string;
+}
+export interface Strategy {
+  beachhead: string;
+  wedge: string;
+  moat: string;
+  first_90_days: string[];
+}
+export interface Competitive {
+  positioning?: Positioning;
+  five_forces?: Force[];
+  battle_table?: BattleRow[];
+  whitespace?: Whitespace[];
+  strategy?: Strategy;
+}
+
 export interface Brief {
   product: string;
   signals: number;
@@ -31,6 +89,9 @@ export interface Brief {
   oneThing: string;
   themes: Theme[];
   teardown: TeardownRow[];
+  interview: InterviewQ[];
+  targets: Targets;
+  competitive: Competitive;
 }
 
 /* Mock data — language lifted from real Scout runs on "Jobber". */
@@ -98,6 +159,112 @@ export const MOCK_BRIEF: Brief = {
       complaint: "information overload",
     },
   ],
+  interview: [
+    {
+      title: "Payment holds",
+      question:
+        "Walk me through the last time a payout was delayed — what did it cost you that week?",
+    },
+    {
+      title: "Tier pressure",
+      question:
+        "If one locked feature moved down a tier, which would change your week — and why that one?",
+    },
+    {
+      title: "Switching moment",
+      question:
+        "You watched a comparison video and hesitated — what claim made you pause, and did you verify it?",
+    },
+  ],
+  targets: {
+    key_players: ["Housecall Pro", "ServiceTitan", "QuoteIQ", "Workiz", "FieldRoutes"],
+    switched_from: ["QuickBooks + spreadsheets", "paper scheduling", "Housecall Pro"],
+    segments: [
+      "solo home-service operators",
+      "2-10 crew field teams",
+      "franchise trades",
+    ],
+    pains_to_mine: [
+      "payout holds at payroll time",
+      "feature paywalls one tier up",
+      "offline mode in the field",
+      "per-seat pricing at crew scale",
+    ],
+  },
+  competitive: {
+    positioning: {
+      x_axis: { label: "Breadth of platform", low: "point tool", high: "all-in-one OS" },
+      y_axis: { label: "Target operator size", low: "solo", high: "enterprise fleet" },
+      players: [
+        { name: "Jobber", x: 62, y: 42, is_subject: true, note: "SMB sweet spot, tier-gated" },
+        { name: "ServiceTitan", x: 88, y: 85, is_subject: false, note: "enterprise depth, heavy onboarding" },
+        { name: "Housecall Pro", x: 58, y: 38, is_subject: false, note: "closest head-to-head" },
+        { name: "QuoteIQ", x: 30, y: 22, is_subject: false, note: "cheap wedge on estimates" },
+        { name: "Workiz", x: 48, y: 35, is_subject: false, note: "communications-led" },
+      ],
+    },
+    five_forces: [
+      { force: "Competitive rivalry", score: 8, level: "high", insight: "Housecall Pro mirrors Jobber's roadmap and sponsors switch-bait comparisons on YouTube." },
+      { force: "Threat of new entrants", score: 6, level: "medium", insight: "AI-first quoting tools (QuoteIQ) enter through one painful workflow at $30/mo." },
+      { force: "Buyer power", score: 7, level: "high", insight: "Owners actively comparison-shop; payment holds and tier walls trigger churn conversations." },
+      { force: "Supplier power", score: 4, level: "medium", insight: "Payments rails (Stripe et al.) and lead sources (Google LSAs) set the margin floor." },
+      { force: "Threat of substitutes", score: 5, level: "medium", insight: "QuickBooks + texting + paper remains the real competitor for solo operators." },
+    ],
+    battle_table: [
+      {
+        name: "Housecall Pro",
+        segment: "1-15 tech home services",
+        pricing: "$59 / $149 / $299 mo",
+        strength: "brand + review volume",
+        weakness: "glitchy mobile app (top review complaint)",
+        how_to_win: "win the field: offline-first mobile + payout speed guarantee",
+      },
+      {
+        name: "ServiceTitan",
+        segment: "mid-market → enterprise trades",
+        pricing: "unpublished, ~$300+/tech",
+        strength: "depth: dispatch, marketing, payroll",
+        weakness: "steep learning curve; overkill under ~10 techs",
+        how_to_win: "be live in a day — onboard in hours, not a 6-week implementation",
+      },
+      {
+        name: "QuoteIQ",
+        segment: "solo operators, price-first",
+        pricing: "$30 → $299 mo",
+        strength: "cheap entry + AI estimates",
+        weakness: "thin beyond quoting; 1-review credibility",
+        how_to_win: "match the price wedge with a real platform behind it",
+      },
+    ],
+    whitespace: [
+      {
+        opportunity: "Instant-payout tier for payroll-critical weeks",
+        why_now: "Payment holds are the #1 trust breaker in reviews",
+        evidence: '"They held an $8,000 payment for six days — I had payroll due Friday."',
+      },
+      {
+        opportunity: "True offline field mode",
+        why_now: "Crews lose connectivity daily; nobody serves it well",
+        evidence: "Recurring complaint across app-store reviews of all three leaders",
+      },
+      {
+        opportunity: "Flat-rate crew pricing",
+        why_now: "Per-seat pricing punishes exactly the teams that grow",
+        evidence: '"Every feature I need lives one tier up. It feels engineered."',
+      },
+    ],
+    strategy: {
+      beachhead: "2-10 crew home-service teams outgrowing QuickBooks but allergic to ServiceTitan onboarding",
+      wedge: "same-day payouts, guaranteed — the moment competitors break trust",
+      moat: "payments volume + job-history data compounding into instant underwriting",
+      first_90_days: [
+        "Ship offline-first mobile scheduling (top complaint on every rival)",
+        "Publish a payout-speed SLA and market it against hold horror stories",
+        "Land 25 design partners from r/smallbusiness switching threads",
+        "Intercept 'Jobber vs X' searches with honest comparison pages",
+      ],
+    },
+  },
 };
 
 /** True when a real backend is configured. Exposed so the UI can show an honest
@@ -130,8 +297,9 @@ export async function fetchBrief(
 }
 
 /** Map the API payload to the Brief shape. Only rename: one_thing → oneThing;
- *  themes/teardown fields already line up 1:1. */
+ *  everything else lines up 1:1. */
 function mapBrief(d: Record<string, unknown>, product: string): Brief {
+  const t = (d.targets as Partial<Targets>) ?? {};
   return {
     product: (d.product as string) ?? product,
     signals: (d.signals as number) ?? 0,
@@ -139,6 +307,14 @@ function mapBrief(d: Record<string, unknown>, product: string): Brief {
     oneThing: (d.one_thing as string) ?? "",
     themes: (d.themes as Theme[]) ?? [],
     teardown: (d.teardown as TeardownRow[]) ?? [],
+    interview: (d.interview as InterviewQ[]) ?? [],
+    targets: {
+      key_players: t.key_players ?? [],
+      switched_from: t.switched_from ?? [],
+      segments: t.segments ?? [],
+      pains_to_mine: t.pains_to_mine ?? [],
+    },
+    competitive: (d.competitive as Competitive) ?? {},
   };
 }
 
@@ -148,6 +324,7 @@ export type ScoutEvent =
   | { event: "source"; source: string; count: number; pool: number }
   | { event: "synthesis"; themes_count: number }
   | { event: "teardown"; count: number }
+  | { event: "competitive"; ok: boolean }
   | { event: "cached" }
   | { event: "error"; detail?: string }
   | { event: "brief"; brief: Record<string, unknown> };

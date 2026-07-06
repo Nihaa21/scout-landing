@@ -1,5 +1,6 @@
 "use client";
 
+import CompetitiveBreakdown from "@/components/CompetitiveBreakdown";
 import type { Brief, Sentiment } from "@/lib/brief";
 
 export type Phase = "scouting" | "done";
@@ -158,41 +159,74 @@ export default function LiveBrief({
             ))}
           </div>
 
-          {/* competitive teardown */}
-          <div
-            className="mt-9 rise"
-            style={{ "--d": `${0.12 + brief.themes.length * 0.08 + 0.08}s` } as React.CSSProperties}
-          >
-            <p className="font-mono text-[11px] text-ink-soft mb-3">
-              competitive teardown
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[12.5px]">
-                <thead>
-                  <tr className="hairline-b font-mono text-[11px] text-ink-faint">
-                    <th className="py-2 pr-4 font-normal">competitor</th>
-                    <th className="py-2 pr-4 font-normal">pricing</th>
-                    <th className="py-2 pr-4 font-normal">rating</th>
-                    <th className="py-2 font-normal">top complaint</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {brief.teardown.map((r) => (
-                    <tr key={r.competitor} className="hairline-b last:border-b-0">
-                      <td className="py-2.5 pr-4 font-medium whitespace-nowrap">
-                        {r.competitor}
-                      </td>
-                      <td className="py-2.5 pr-4 font-mono text-[11.5px] whitespace-nowrap">
-                        {r.pricing}
-                      </td>
-                      <td className="py-2.5 pr-4 font-mono text-[11.5px] whitespace-nowrap">
-                        {r.rating}
-                      </td>
-                      <td className="py-2.5 text-ink-soft">{r.complaint}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* interview agenda */}
+          {brief.interview.length > 0 && (
+            <div className="mt-10 rise" style={{ "--d": "0.5s" } as React.CSSProperties}>
+              <p className="font-mono text-[11px] text-ink-soft mb-3">
+                interview agenda — ask a human
+              </p>
+              <ol className="space-y-2.5">
+                {brief.interview.map((q, i) => (
+                  <li key={q.question} className="flex gap-3 text-[13px] leading-relaxed">
+                    <span className="font-mono text-[11px] text-accent shrink-0 translate-y-[1px]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span>
+                      <span className="font-medium">{q.title}.</span>{" "}
+                      <span className="text-ink-soft">{q.question}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* deep-research targets */}
+          {Object.values(brief.targets).some((v) => v.length > 0) && (
+            <div className="mt-10 rise" style={{ "--d": "0.56s" } as React.CSSProperties}>
+              <p className="font-mono text-[11px] text-ink-soft mb-3">
+                deep-research targets
+              </p>
+              <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                {(
+                  [
+                    ["key players", brief.targets.key_players],
+                    ["switched from", brief.targets.switched_from],
+                    ["segments", brief.targets.segments],
+                    ["pains to mine", brief.targets.pains_to_mine],
+                  ] as const
+                ).map(
+                  ([label, items]) =>
+                    items.length > 0 && (
+                      <div key={label}>
+                        <p className="font-mono text-[10px] text-ink-faint mb-1.5">{label}</p>
+                        <ul className="flex flex-wrap gap-1.5">
+                          {items.map((item) => (
+                            <li
+                              key={item}
+                              className="hairline rounded-full px-2.5 py-0.5 text-[11.5px] text-ink-soft"
+                            >
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ),
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* competitive breakdown — the MBA layer */}
+          <div className="mt-10 rise" style={{ "--d": "0.62s" } as React.CSSProperties}>
+            <div className="hairline-t pt-6">
+              <p className="font-mono text-[11px] text-accent mb-5">
+                competitive breakdown
+              </p>
+              <CompetitiveBreakdown
+                competitive={brief.competitive}
+                teardown={brief.teardown}
+              />
             </div>
           </div>
         </div>

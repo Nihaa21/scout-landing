@@ -8,7 +8,8 @@ const STAGE_LABEL: Record<string, string> = {
   routing: "routing sources…",
   gathering: "reading sources…",
   synthesizing: "finding the themes…",
-  teardown: "competitive teardown…",
+  teardown: "scraping competitors…",
+  competitive: "building the competitive breakdown…",
 };
 
 export default function Home() {
@@ -72,7 +73,8 @@ export default function Home() {
             setStage(STAGE_LABEL.teardown);
             break;
           case "teardown":
-            break; // teardown done; the brief arrives next
+            setStage(STAGE_LABEL.competitive); // teardown done; strategy pass runs now
+            break;
         }
       });
       setBrief(final);
