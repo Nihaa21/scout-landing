@@ -25,8 +25,15 @@ export interface TeardownRow {
 }
 
 export interface InterviewQ {
-  title: string;
   question: string;
+  why: string; // the decision this answer unlocks
+}
+
+export interface Pain {
+  pain: string;
+  detail: string; // who feels it, when, what it costs — the real scout
+  severity: number; // 1-5
+  quote: string;
 }
 
 export interface Targets {
@@ -90,6 +97,7 @@ export interface Brief {
   themes: Theme[];
   teardown: TeardownRow[];
   interview: InterviewQ[];
+  pains: Pain[];
   targets: Targets;
   competitive: Competitive;
 }
@@ -161,19 +169,91 @@ export const MOCK_BRIEF: Brief = {
   ],
   interview: [
     {
-      title: "Payment holds",
       question:
-        "Walk me through the last time a payout was delayed — what did it cost you that week?",
+        "Walk me through the last time a payout was delayed — what did it cost you that week, in dollars and in stress?",
+      why: "Sizes the payment-hold pain in real money → pricing for an instant-payout tier",
     },
     {
-      title: "Tier pressure",
       question:
         "If one locked feature moved down a tier, which would change your week — and why that one?",
+      why: "Reveals which paywall actually drives upgrade resentment vs. acceptance",
     },
     {
-      title: "Switching moment",
+      question:
+        "What did you run your business on before this — and what was the moment you decided that had to change?",
+      why: "Maps the real switching trigger, not the marketing version of it",
+    },
+    {
+      question:
+        "When your crew loses signal in the field, what do you do right now — walk me through yesterday's workaround.",
+      why: "Validates offline-first as a wedge and exposes the workaround cost",
+    },
+    {
       question:
         "You watched a comparison video and hesitated — what claim made you pause, and did you verify it?",
+      why: "Separates factual objections from sponsored spin in the deflection funnel",
+    },
+    {
+      question:
+        "Who else touched this decision — spouse, office manager, accountant — and what did they push back on?",
+      why: "Surfaces the hidden buying committee in owner-operated businesses",
+    },
+    {
+      question:
+        "What's the one report or number you check every Friday, and where do you get it today?",
+      why: "Finds the retention hook — the metric the product must own",
+    },
+    {
+      question:
+        "If your subscription doubled tomorrow, what would you do Monday morning?",
+      why: "Tests true willingness to pay and switching-cost perception",
+    },
+    {
+      question:
+        "Tell me about the last time the software embarrassed you in front of a customer.",
+      why: "Uncovers trust-breaking moments that reviews rarely articulate",
+    },
+    {
+      question:
+        "What do you still keep on paper or in your head — and why hasn't any app earned it?",
+      why: "Locates the unserved workflow where the next wedge lives",
+    },
+  ],
+  pains: [
+    {
+      pain: "Payout holds at payroll time",
+      detail:
+        "Owners run payroll off weekly card settlements. When a processor flags a large job payment and freezes it for days without a named reason or a human to call, the owner covers wages from personal savings or delays their crew — burning trust in both directions. It's the single moment users describe as 'the day I started shopping for alternatives.'",
+      severity: 5,
+      quote: "They held an $8,000 payment for six days with no explanation. I had payroll due Friday.",
+    },
+    {
+      pain: "Feature paywalls one tier up",
+      detail:
+        "The features owners describe as table stakes — automatic review requests, job costing, two-way texting — sit one tier above what they pay. Because the jump is per-user, a 6-person crew faces a 3-4x bill to unlock one workflow, so they bolt on free point tools instead and resent the platform they otherwise like.",
+      severity: 4,
+      quote: "Every feature I actually need lives one tier up. It feels engineered.",
+    },
+    {
+      pain: "No offline mode in the field",
+      detail:
+        "Crews work in basements, rural routes, and dead zones daily. When the app can't load a job, techs photograph screens the night before or fall back to paper, then re-enter everything at home. Data loss between site and office is the top-mentioned reliability complaint across all major rivals — and nobody has solved it.",
+      severity: 4,
+      quote: "",
+    },
+    {
+      pain: "Per-seat pricing punishes growth",
+      detail:
+        "The pricing model inverts the customer's success: hire two techs for the busy season and the software bill jumps before the revenue does. Owners describe gaming seats — sharing logins, keeping field staff off the system — which quietly destroys the data the platform needs to be useful.",
+      severity: 3,
+      quote: "",
+    },
+    {
+      pain: "Comparison-video deflection at signup",
+      detail:
+        "Prospects arrive pre-sold, watch one sponsored 'X vs Y' video during trial, and defect before onboarding finishes. The claims are often stale or paid, but no vendor answers them honestly on their own site, so the cheapest-looking option wins the undecided.",
+      severity: 3,
+      quote: "Well, I'm glad I watched this video, because I was about to sign up with Jobber.",
     },
   ],
   targets: {
@@ -308,6 +388,7 @@ function mapBrief(d: Record<string, unknown>, product: string): Brief {
     themes: (d.themes as Theme[]) ?? [],
     teardown: (d.teardown as TeardownRow[]) ?? [],
     interview: (d.interview as InterviewQ[]) ?? [],
+    pains: (d.pains as Pain[]) ?? [],
     targets: {
       key_players: t.key_players ?? [],
       switched_from: t.switched_from ?? [],

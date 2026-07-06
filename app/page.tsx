@@ -178,7 +178,7 @@ export default function Home() {
           {error && (
             <p
               role="alert"
-              className="max-w-3xl mx-auto mb-3 text-[12.5px] text-neg font-mono"
+              className="max-w-6xl mx-auto mb-3 text-[12.5px] text-neg font-mono"
             >
               ⚠ {error} — showing the last brief.
             </p>
@@ -197,8 +197,8 @@ export default function Home() {
       </main>
 
       <footer className="hairline-t px-5 sm:px-8 py-4">
-        <p className="font-mono text-[11px] text-ink-faint max-w-3xl mx-auto">
-          scout · autonomous voice-of-customer research · local preview
+        <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto">
+          scout · autonomous voice-of-customer research
         </p>
       </footer>
     </div>

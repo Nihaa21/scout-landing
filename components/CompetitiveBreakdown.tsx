@@ -72,22 +72,25 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
 /* ── Porter's five forces ────────────────────────────────────────────────── */
 function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]> }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {forces.map((f) => (
-        <div key={f.force} className="grid sm:grid-cols-[190px_1fr] gap-x-4 gap-y-1 items-start">
-          <div>
+        <div key={f.force} className="hairline-b pb-4 last:border-b-0 last:pb-0">
+          <div className="flex items-center justify-between gap-3">
             <p className="text-[12.5px] font-medium">{f.force}</p>
-            <div className="flex items-center gap-1.5 mt-1" aria-label={`${f.score} out of 10 — ${f.level}`}>
+            <div
+              className="flex items-center gap-1 shrink-0"
+              aria-label={`${f.score} out of 10 — ${f.level}`}
+            >
               {Array.from({ length: 10 }).map((_, i) => (
                 <span
                   key={i}
-                  className={`h-[3px] w-3 rounded-full ${i < f.score ? "bg-accent" : "bg-ink/10"}`}
+                  className={`h-[3px] w-2.5 rounded-full ${i < f.score ? "bg-accent" : "bg-ink/10"}`}
                 />
               ))}
-              <span className="font-mono text-[10px] text-ink-faint ml-1">{f.level}</span>
+              <span className="font-mono text-[10px] text-ink-faint ml-1.5">{f.level}</span>
             </div>
           </div>
-          <p className="text-[12.5px] text-ink-soft leading-relaxed">{f.insight}</p>
+          <p className="text-[12px] text-ink-soft leading-relaxed mt-1.5">{f.insight}</p>
         </div>
       ))}
     </div>
@@ -108,18 +111,21 @@ export default function CompetitiveBreakdown({
   if (!hasAnything) return null;
 
   return (
-    <div className="space-y-9">
-      {positioning && positioning.players?.length > 0 && (
-        <div>
-          <Label>positioning map</Label>
-          <PositioningMap p={positioning} />
-        </div>
-      )}
-
-      {five_forces && five_forces.length > 0 && (
-        <div>
-          <Label>five forces</Label>
-          <FiveForces forces={five_forces} />
+    <div className="space-y-10">
+      {(positioning?.players?.length || five_forces?.length) && (
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start">
+          {positioning && positioning.players?.length > 0 && (
+            <div>
+              <Label>positioning map</Label>
+              <PositioningMap p={positioning} />
+            </div>
+          )}
+          {five_forces && five_forces.length > 0 && (
+            <div>
+              <Label>five forces</Label>
+              <FiveForces forces={five_forces} />
+            </div>
+          )}
         </div>
       )}
 
