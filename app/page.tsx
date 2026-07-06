@@ -120,12 +120,21 @@ export default function Home() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[64px] sm:text-[92px] leading-[0.9] font-medium tracking-[-0.04em] mb-6"
+            className="text-[64px] sm:text-[92px] leading-[0.9] font-medium tracking-[-0.04em]"
           >
             scout
           </motion.p>
 
-          <h1 className="text-[26px] sm:text-[38px] leading-[1.15] font-normal tracking-[-0.015em] text-balance max-w-[22ch]">
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-4 mb-7 font-mono text-[11px] sm:text-[12px] tracking-[0.18em] uppercase text-ink-soft"
+          >
+            0→1 product research
+          </motion.p>
+
+          <h1 className="text-[21px] sm:text-[28px] leading-[1.2] font-normal tracking-[-0.015em] text-balance max-w-[24ch]">
             Research what the market thinks — before you build it.
           </h1>
           <p className="mt-5 text-[15px] sm:text-[16px] text-ink-soft leading-relaxed text-pretty max-w-[52ch]">
