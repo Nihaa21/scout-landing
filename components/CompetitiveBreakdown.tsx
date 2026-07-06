@@ -23,90 +23,124 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   );
 }
 
-/* ── 2x2 positioning map ─────────────────────────────────────────────────── */
+/* ── 2x2 positioning map ─────────────────────────────────────────────────
+   No rotated text, no cramped margins: axis ends live as clean labels above
+   and below the plot, players get halo'd bold names that flip sides near the
+   edge, and the plot itself reads like graph paper with the winning quadrant
+   tinted. */
 function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
-  const W = 640, H = 420, M = 46;
-  const px = (v: number) => M + (Math.min(100, Math.max(0, v)) / 100) * (W - 2 * M);
-  const py = (v: number) => H - M - (Math.min(100, Math.max(0, v)) / 100) * (H - 2 * M);
+  const W = 640, H = 520, ML = 24, MR = 24, MT = 46, MB = 88;
+  const PW = W - ML - MR, PH = H - MT - MB;
+  const px = (v: number) => ML + (Math.min(100, Math.max(0, v)) / 100) * PW;
+  const py = (v: number) => MT + PH - (Math.min(100, Math.max(0, v)) / 100) * PH;
+  const subject = p.players.find((pl) => pl.is_subject);
+
+  /* halo'd label — paper stroke underneath keeps bold text legible anywhere */
+  const halo = (x: number, y: number, anchor: "start" | "end" | "middle", fill: string, size: number, weight: number, mono: boolean, txt: string) => (
+    <>
+      <text x={x} y={y} textAnchor={anchor} fontSize={size} fontWeight={weight}
+        fontFamily={mono ? "var(--font-mono)" : "var(--font-sans)"}
+        stroke="var(--color-surface)" strokeWidth={4} strokeLinejoin="round" opacity="0.92">
+        {txt}
+      </text>
+      <text x={x} y={y} textAnchor={anchor} fontSize={size} fontWeight={weight}
+        fontFamily={mono ? "var(--font-mono)" : "var(--font-sans)"} fill={fill}>
+        {txt}
+      </text>
+    </>
+  );
 
   return (
-    <Card className="p-4">
+    <Card className="p-5">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={`Positioning map: ${p.x_axis.label} vs ${p.y_axis.label}`}
         className="w-full h-auto"
       >
-        {/* quadrant tints — top-right (high/high) glows, bottom-left recedes */}
-        <rect x={W / 2} y={M} width={(W - 2 * M) / 2} height={(H - 2 * M) / 2}
-          fill="var(--color-accent)" opacity="0.05" />
-        <rect x={M} y={H / 2} width={(W - 2 * M) / 2} height={(H - 2 * M) / 2}
-          fill="var(--color-ink)" opacity="0.025" />
+        <defs>
+          <pattern id="pm-dots" width="34" height="34" patternUnits="userSpaceOnUse">
+            <circle cx="1.2" cy="1.2" r="1.2" fill="var(--color-ink)" opacity="0.07" />
+          </pattern>
+          <linearGradient id="pm-win" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0.4" stopColor="var(--color-accent)" stopOpacity="0" />
+            <stop offset="1" stopColor="var(--color-accent)" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
 
-        <rect x={M} y={M} width={W - 2 * M} height={H - 2 * M} fill="none"
-          stroke="var(--color-hairline)" strokeWidth="1" />
-        <line x1={W / 2} y1={M} x2={W / 2} y2={H - M} stroke="var(--color-ink-faint)"
-          strokeWidth="1" strokeDasharray="3 5" opacity="0.55" />
-        <line x1={M} y1={H / 2} x2={W - M} y2={H / 2} stroke="var(--color-ink-faint)"
-          strokeWidth="1" strokeDasharray="3 5" opacity="0.55" />
+        {/* plot — graph paper + a soft glow toward the winning corner */}
+        <rect x={ML} y={MT} width={PW} height={PH} rx="10" fill="var(--color-paper)" opacity="0.55" />
+        <rect x={ML} y={MT} width={PW} height={PH} rx="10" fill="url(#pm-dots)" />
+        <rect x={ML} y={MT} width={PW} height={PH} rx="10" fill="url(#pm-win)" />
+        <rect x={ML} y={MT} width={PW} height={PH} rx="10" fill="none"
+          stroke="var(--color-hairline)" strokeWidth="1.2" />
 
-        <text x={W / 2} y={H - 10} textAnchor="middle" fontSize="11.5" fontWeight="700"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.x_axis.label}</text>
-        <text x={M} y={H - M + 16} textAnchor="start" fontSize="10" fontWeight="600"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">← {p.x_axis.low}</text>
-        <text x={W - M} y={H - M + 16} textAnchor="end" fontSize="10" fontWeight="600"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.x_axis.high} →</text>
-        <text x={14} y={H / 2} textAnchor="middle" fontSize="11.5" fontWeight="700" fontFamily="var(--font-mono)"
-          fill="var(--color-ink-soft)" transform={`rotate(-90 14 ${H / 2})`}>{p.y_axis.label}</text>
-        <text x={M - 6} y={M + 4} textAnchor="end" fontSize="10" fontWeight="600"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.y_axis.high}</text>
-        <text x={M - 6} y={H - M} textAnchor="end" fontSize="10" fontWeight="600"
-          fontFamily="var(--font-mono)" fill="var(--color-ink-soft)">{p.y_axis.low}</text>
+        {/* dashed crosshair */}
+        <line x1={ML + PW / 2} y1={MT + 8} x2={ML + PW / 2} y2={MT + PH - 8}
+          stroke="var(--color-ink-faint)" strokeWidth="1" strokeDasharray="2 6" strokeLinecap="round" opacity="0.6" />
+        <line x1={ML + 8} y1={MT + PH / 2} x2={ML + PW - 8} y2={MT + PH / 2}
+          stroke="var(--color-ink-faint)" strokeWidth="1" strokeDasharray="2 6" strokeLinecap="round" opacity="0.6" />
 
-        {p.players.map((pl, i) => (
-          <motion.g
-            key={pl.name}
-            initial={{ opacity: 0, scale: 0.6 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.25 + i * 0.1, duration: 0.45, ease: EASE }}
-            style={{ transformOrigin: `${px(pl.x)}px ${py(pl.y)}px` }}
-            className="cursor-default"
-          >
-            <title>{`${pl.name} — ${pl.note}`}</title>
-            {pl.is_subject && (
-              <>
-                <circle cx={px(pl.x)} cy={py(pl.y)} r={16}
-                  fill="var(--color-accent)" opacity="0.1" />
-                <circle cx={px(pl.x)} cy={py(pl.y)} r={11} fill="none"
-                  stroke="var(--color-accent)" strokeWidth="1" opacity="0.45" />
-              </>
-            )}
-            <circle
-              cx={px(pl.x)} cy={py(pl.y)} r={pl.is_subject ? 7 : 5.5}
-              fill={pl.is_subject ? "var(--color-accent)" : "var(--color-surface)"}
-              stroke={pl.is_subject ? "var(--color-accent)" : "var(--color-accent-deep)"}
-              strokeWidth={pl.is_subject ? 0 : 1.6}
-            />
-            {/* paper halo so bold names stay legible over grid lines */}
-            <text
-              x={px(pl.x) + 11} y={py(pl.y) + 4.5} fontSize="12.5"
-              fontFamily="var(--font-sans)" fontWeight="700"
-              stroke="var(--color-surface)" strokeWidth="3.5" strokeLinejoin="round"
-              opacity="0.9"
+        {/* y-axis ends — above and below the plot, never rotated */}
+        {halo(W / 2, MT - 14, "middle", "var(--color-accent)", 11, 700, true, `▲ ${p.y_axis.high}`)}
+        {halo(W / 2, MT + PH + 44, "middle", "var(--color-ink-soft)", 11, 700, true, `▼ ${p.y_axis.low}`)}
+
+        {/* x-axis ends — bottom corners */}
+        {halo(ML + 2, MT + PH + 22, "start", "var(--color-ink-soft)", 11, 700, true, `◀ ${p.x_axis.low}`)}
+        {halo(W - MR - 2, MT + PH + 22, "end", "var(--color-accent)", 11, 700, true, `${p.x_axis.high} ▶`)}
+
+        {/* axis titles — one quiet caption line */}
+        {halo(W / 2, H - 14, "middle", "var(--color-ink-faint)", 10, 500, true,
+          `x · ${p.x_axis.label}   |   y · ${p.y_axis.label}`)}
+
+        {p.players.map((pl, i) => {
+          const cx = px(pl.x), cy = py(pl.y);
+          const flip = cx > ML + PW - 120; // label flips left near the right edge
+          const lx = flip ? cx - 12 : cx + 12;
+          const ly = Math.min(Math.max(cy + 4.5, MT + 16), MT + PH - 8);
+          return (
+            <motion.g
+              key={pl.name}
+              initial={{ opacity: 0, scale: 0.6 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.25 + i * 0.1, duration: 0.45, ease: EASE }}
+              style={{ transformOrigin: `${cx}px ${cy}px` }}
+              className="cursor-default"
             >
-              {pl.name}
-            </text>
-            <text
-              x={px(pl.x) + 11} y={py(pl.y) + 4.5} fontSize="12.5"
-              fontFamily="var(--font-sans)" fontWeight="700"
-              fill={pl.is_subject ? "var(--color-accent)" : "var(--color-ink)"}
-            >
-              {pl.name}
-            </text>
-          </motion.g>
-        ))}
+              <title>{`${pl.name} — ${pl.note}`}</title>
+              {pl.is_subject && (
+                <>
+                  <circle cx={cx} cy={cy} r={18} fill="var(--color-accent)" opacity="0.1" />
+                  <circle cx={cx} cy={cy} r={12} fill="none"
+                    stroke="var(--color-accent)" strokeWidth="1.2" strokeDasharray="2 3" opacity="0.6" />
+                </>
+              )}
+              <circle
+                cx={cx} cy={cy} r={pl.is_subject ? 7.5 : 6}
+                fill={pl.is_subject ? "var(--color-accent)" : "var(--color-surface)"}
+                stroke={pl.is_subject ? "var(--color-surface)" : "var(--color-accent-deep)"}
+                strokeWidth={pl.is_subject ? 2 : 1.7}
+              />
+              {halo(lx, ly, flip ? "end" : "start",
+                pl.is_subject ? "var(--color-accent)" : "var(--color-ink)", 13, 700, false, pl.name)}
+            </motion.g>
+          );
+        })}
       </svg>
+
+      {/* legend */}
+      <div className="mt-1 flex items-center justify-center gap-5 font-mono text-[10.5px] text-ink-soft">
+        {subject && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-[9px] rounded-full bg-accent inline-block" /> {subject.name} (you)
+          </span>
+        )}
+        <span className="inline-flex items-center gap-1.5">
+          <span className="size-[9px] rounded-full border-[1.7px] border-accent-deep bg-surface inline-block" /> competitors
+        </span>
+      </div>
+
       <p className="sr-only">{p.players.map((pl) => `${pl.name}: ${pl.note}`).join(". ")}</p>
     </Card>
   );
