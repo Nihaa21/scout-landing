@@ -172,7 +172,7 @@ export default function CompetitiveBreakdown({
                   {/* name + pricing */}
                   <div className="flex items-center justify-between gap-3">
                     <h4 className="text-[15px] font-semibold">{r.name}</h4>
-                    <span className="font-mono text-[11px] text-ink-soft whitespace-nowrap">{r.pricing}</span>
+                    <span className="font-mono text-[11px] font-semibold text-ink whitespace-nowrap">{r.pricing}</span>
                   </div>
                   <p className="text-[11.5px] text-ink-faint mt-0.5">Serves {r.segment}</p>
 

@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import CompetitiveBreakdown from "@/components/CompetitiveBreakdown";
 import DownloadPdf from "@/components/DownloadPdf";
 import PlatformLogo from "@/components/PlatformLogo";
 import Theater, { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
 import CountUp from "@/components/motion/CountUp";
-import Typewriter from "@/components/motion/Typewriter";
 import { Card } from "@/components/ui/card";
 import type { Brief, Sentiment } from "@/lib/brief";
 
@@ -90,9 +88,6 @@ export default function LiveBrief({
   elapsed?: number;
   live?: boolean;
 }) {
-  const [typed, setTyped] = useState(false);
-  useEffect(() => setTyped(false), [brief?.oneThing]);
-
   if (phase !== "scouting" && !brief) return null;
 
   const kpis: [string, number][] = brief
@@ -110,7 +105,11 @@ export default function LiveBrief({
       className="print-root hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
     >
       {/* header — product centered + prominent live/signals */}
-      <header className="relative hairline-b px-6 py-7 sm:px-8 bg-surface/80 pr-32 sm:pr-40">
+      <header
+        className={`relative px-6 py-7 sm:px-8 bg-surface/80 ${
+          phase === "scouting" ? "text-center" : "hairline-b pr-32 sm:pr-40"
+        }`}
+      >
         {phase !== "scouting" && brief && (
           <div className="absolute right-5 sm:right-6 top-1/2 -translate-y-1/2">
             <DownloadPdf />
@@ -119,7 +118,7 @@ export default function LiveBrief({
         <h2 className="text-[26px] sm:text-[34px] font-bold tracking-[-0.02em] leading-none">
           {product}
         </h2>
-        <div className="mt-3.5 flex justify-start">
+        <div className={`mt-3.5 flex ${phase === "scouting" ? "justify-center" : "justify-start"}`}>
           {phase === "scouting" ? (
             <span className="inline-flex items-center gap-2 rounded-full hairline px-3.5 py-1 font-mono text-[12px]">
               <span aria-hidden="true" className="size-[7px] rounded-full bg-accent breathe" />
@@ -193,16 +192,8 @@ export default function LiveBrief({
             ))}
           </motion.div>
 
-          {/* The One Thing */}
-          <div className="mt-14">
-            <p className="font-mono text-[12.5px] font-semibold tracking-[0.02em] text-accent mb-2.5">The One Thing</p>
-            <p className="text-[26px] sm:text-[32px] leading-[1.28] font-medium tracking-[-0.015em] max-w-[46ch] min-h-[2.2em]">
-              <Typewriter key={brief.oneThing} text={brief.oneThing} delay={500} speed={16} onDone={() => setTyped(true)} />
-            </p>
-          </div>
-
           {/* Themes */}
-          <motion.div variants={stagger} initial="hidden" animate={typed ? "show" : "hidden"} className="mt-14">
+          <motion.div variants={stagger} initial="hidden" animate="show" className="mt-14">
             <motion.div variants={riseIn}>
               <SectionHead kicker="What The Crowd Says" title="Themes" sub="Ranked by frequency × severity" />
             </motion.div>
@@ -300,7 +291,7 @@ export default function LiveBrief({
                     <div className="hairline-l pl-4 group-hover:border-accent/60 transition-colors duration-300">
                       <p className="text-[15px] leading-relaxed">{q.question}</p>
                       {q.why && (
-                        <p className="font-mono text-[10.5px] text-ink-faint mt-1.5 leading-relaxed opacity-80 group-hover:opacity-100 group-hover:text-accent transition-all duration-300">
+                        <p className="font-mono text-[10.5px] text-accent mt-1.5 leading-relaxed transition-all duration-300">
                           → {q.why}
                         </p>
                       )}
@@ -333,7 +324,7 @@ export default function LiveBrief({
                   ([label, items, accent]) =>
                     items.length > 0 && (
                       <Card key={label} className="p-4">
-                        <p className="text-[12px] font-semibold text-ink-soft mb-2.5">{label}</p>
+                        <p className="text-[16px] font-bold text-ink mb-3 tracking-[-0.01em]">{label}</p>
                         <ul className="flex flex-wrap gap-2">
                           {items.map((item) => (
                             <li

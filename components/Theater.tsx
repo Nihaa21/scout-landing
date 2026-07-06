@@ -146,9 +146,9 @@ export default function Theater({
   const [title, sub] = STAGE_COPY[stage];
 
   return (
-    <div className="px-5 sm:px-7 py-16 sm:py-20 flex flex-col items-center text-center" role="status" aria-live="polite">
-      {/* stage banner — big, centered */}
-      <div className="mb-12 h-[74px] flex flex-col items-center justify-center">
+    <div className="pt-5 pb-16 sm:pb-20 flex flex-col items-center text-center w-full" role="status" aria-live="polite">
+      {/* stage banner — sits right below the subject header, above the line */}
+      <div className="px-5 sm:px-7 mb-8 min-h-[74px] flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
           <motion.div
             key={title}
@@ -166,15 +166,18 @@ export default function Theater({
         </AnimatePresence>
       </div>
 
+      {/* horizontal line — after the header cluster, before the roster */}
+      <div className="hairline-b w-full mb-12" />
+
       {/* platform roster — logo + name */}
-      <ul className="w-full max-w-md text-left">
+      <ul className="w-full max-w-md text-left px-5 sm:px-7">
         {rows.map(({ name, status }) => (
           <Row key={name} name={name} status={status} />
         ))}
       </ul>
 
       {/* footer */}
-      <div className="mt-12 font-mono text-[12px] text-ink-faint">
+      <div className="mt-12 px-5 sm:px-7 font-mono text-[12px] text-ink-faint">
         {live ? (
           <>
             Live research in progress
