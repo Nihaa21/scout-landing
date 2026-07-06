@@ -90,6 +90,9 @@ export default function LiveBrief({
 }) {
   if (phase !== "scouting" && !brief) return null;
 
+  // Always show the subject with a capitalized first letter.
+  const displayProduct = product ? product[0].toUpperCase() + product.slice(1) : product;
+
   const kpis: [string, number][] = brief
     ? [
         ["Signals Read", brief.signals],
@@ -101,7 +104,7 @@ export default function LiveBrief({
 
   return (
     <section
-      aria-label={`Research brief for ${product}`}
+      aria-label={`Research brief for ${displayProduct}`}
       className="print-root hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
     >
       {/* header — product centered + prominent live/signals */}
@@ -116,7 +119,7 @@ export default function LiveBrief({
           </div>
         )}
         <h2 className="text-[26px] sm:text-[34px] font-bold tracking-[-0.02em] leading-none">
-          {product}
+          {displayProduct}
         </h2>
         <div className={`mt-3.5 flex ${phase === "scouting" ? "justify-center" : "justify-start"}`}>
           {phase === "scouting" ? (

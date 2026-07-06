@@ -2,14 +2,6 @@
 
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { Competitive, TeardownRow } from "@/lib/brief";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -167,24 +159,24 @@ export default function CompetitiveBreakdown({
           <Label>Battle Table — How To Win Against Each</Label>
           <div className="grid gap-3 lg:grid-cols-2">
             {battle_table.map((r) => (
-              <motion.div key={r.name} whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
-                <Card className="p-4 h-full hover:border-accent/40 break-inside-avoid">
+              <motion.div key={r.name} whileHover={{ y: -2 }} transition={{ duration: 0.25 }} className="min-w-0">
+                <Card className="p-4 h-full hover:border-accent/40 break-inside-avoid overflow-hidden">
                   {/* name + pricing */}
-                  <div className="flex items-center justify-between gap-3">
-                    <h4 className="text-[15px] font-semibold">{r.name}</h4>
-                    <span className="font-mono text-[11px] font-semibold text-ink whitespace-nowrap">{r.pricing}</span>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <h4 className="text-[15px] font-semibold min-w-0 break-words">{r.name}</h4>
+                    <span className="font-mono text-[11px] font-semibold text-ink shrink-0 break-words">{r.pricing}</span>
                   </div>
-                  <p className="text-[11.5px] text-ink-faint mt-0.5">Serves {r.segment}</p>
+                  <p className="text-[11.5px] text-ink-faint mt-1 break-words">Serves {r.segment}</p>
 
                   {/* strength / weakness */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    <div className="rounded-[8px] bg-pos/[0.08] px-2.5 py-2">
+                    <div className="min-w-0 rounded-[8px] bg-pos/[0.08] px-2.5 py-2">
                       <p className="font-mono text-[9px] uppercase tracking-wide text-pos mb-0.5">Strength</p>
-                      <p className="text-[12px] leading-snug text-ink">{r.strength}</p>
+                      <p className="text-[12px] leading-snug text-ink break-words">{r.strength}</p>
                     </div>
-                    <div className="rounded-[8px] bg-neg/[0.08] px-2.5 py-2">
+                    <div className="min-w-0 rounded-[8px] bg-neg/[0.08] px-2.5 py-2">
                       <p className="font-mono text-[9px] uppercase tracking-wide text-neg mb-0.5">Weakness</p>
-                      <p className="text-[12px] leading-snug text-ink">{r.weakness}</p>
+                      <p className="text-[12px] leading-snug text-ink break-words">{r.weakness}</p>
                     </div>
                   </div>
 
@@ -193,7 +185,7 @@ export default function CompetitiveBreakdown({
                     <p className="font-mono text-[9px] uppercase tracking-wide text-accent mb-1 flex items-center gap-1">
                       ⚔ How To Win
                     </p>
-                    <p className="text-[13px] leading-snug text-accent font-medium">{r.how_to_win}</p>
+                    <p className="text-[13px] leading-snug text-accent font-medium break-words">{r.how_to_win}</p>
                   </div>
                 </Card>
               </motion.div>
@@ -284,26 +276,41 @@ export default function CompetitiveBreakdown({
       {teardown.length > 0 && (
         <Reveal>
           <Label>Scraped Facts — G2 · Capterra · Pricing Pages</Label>
-          <Table>
-            <TableHeader>
-              <tr className="hairline-b">
-                <TableHead>Competitor</TableHead>
-                <TableHead>Pricing</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Top Complaint</TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              {teardown.map((r) => (
-                <TableRow key={r.competitor}>
-                  <TableCell className="font-medium whitespace-nowrap">{r.competitor}</TableCell>
-                  <TableCell className="font-mono text-[11.5px] whitespace-nowrap">{r.pricing}</TableCell>
-                  <TableCell className="font-mono text-[11.5px] whitespace-nowrap">{r.rating}</TableCell>
-                  <TableCell className="text-ink-soft">{r.complaint}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto rounded-[12px] hairline">
+            <table className="w-full min-w-[560px] text-left text-[12.5px] border-collapse">
+              <thead>
+                <tr className="hairline-b bg-paper/70">
+                  {["Competitor", "Pricing", "Rating", "Top Complaint"].map((h) => (
+                    <th
+                      key={h}
+                      className="py-3 px-4 font-mono text-[10px] font-bold uppercase tracking-[0.07em] text-ink-soft"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {teardown.map((r, i) => (
+                  <tr
+                    key={r.competitor}
+                    className={`align-top hairline-b last:border-b-0 transition-colors hover:bg-accent-deep/[0.04] ${
+                      i % 2 ? "bg-paper/40" : ""
+                    }`}
+                  >
+                    <td className="py-3 px-4 font-semibold text-ink whitespace-nowrap">{r.competitor}</td>
+                    <td className="py-3 px-4 font-mono text-[11.5px] text-ink-soft">{r.pricing}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-mid/[0.14] px-2 py-0.5 font-mono text-[11px] font-semibold text-mid">
+                        ★ {r.rating}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-ink-soft leading-relaxed min-w-[220px]">{r.complaint}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Reveal>
       )}
     </div>
