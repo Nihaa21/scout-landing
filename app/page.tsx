@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import LiveBrief, { type Phase } from "@/components/LiveBrief";
-import { MOCK_BRIEF, fetchBrief, type Brief } from "@/lib/brief";
+import { MOCK_BRIEF, fetchBrief, IS_LIVE, type Brief } from "@/lib/brief";
 
 const STEP_MS = 700; // per-source light-up
 const TEARDOWN_MS = 1100; // the teardown step takes a beat longer
@@ -12,33 +12,57 @@ export default function Home() {
   const [brief, setBrief] = useState<Brief>(MOCK_BRIEF);
   const [phase, setPhase] = useState<Phase>("done");
   const [lit, setLit] = useState(MOCK_BRIEF.sources.length + 1); // all lit at rest
+  const [elapsed, setElapsed] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(
+    () => () => {
+      timers.current.forEach(clearTimeout);
+      if (ticker.current) clearInterval(ticker.current);
+    },
+    [],
+  );
 
-  function runScout(e: React.FormEvent) {
+  async function runScout(e: React.FormEvent) {
     e.preventDefault();
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    if (ticker.current) clearInterval(ticker.current);
 
     const steps = brief.sources.length; // sources, then teardown
     setPhase("scouting");
+    setError(null);
     setLit(0);
+    setElapsed(0);
 
+    // Animate the source row lighting up (visual pacing).
     for (let i = 1; i <= steps; i++) {
       timers.current.push(setTimeout(() => setLit(i), i * STEP_MS));
     }
     timers.current.push(
-      setTimeout(
-        async () => {
-          setLit(steps + 1);
-          const next = await fetchBrief(query.trim());
-          setBrief(next);
-          setPhase("done");
-        },
-        steps * STEP_MS + TEARDOWN_MS,
-      ),
+      setTimeout(() => setLit(steps + 1), steps * STEP_MS + TEARDOWN_MS),
     );
+
+    // Kick the real request off immediately (parallel with the animation), and
+    // count elapsed seconds so a multi-minute live run doesn't look frozen.
+    const startedAt = Date.now();
+    ticker.current = setInterval(
+      () => setElapsed(Math.round((Date.now() - startedAt) / 1000)),
+      1000,
+    );
+
+    try {
+      const next = await fetchBrief(query.trim());
+      setBrief(next);
+      setPhase("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Scout run failed.");
+      setPhase("done");
+    } finally {
+      if (ticker.current) clearInterval(ticker.current);
+    }
   }
 
   return (
@@ -101,7 +125,21 @@ export default function Home() {
 
         {/* the live brief — centerpiece */}
         <div className="pb-24">
-          <LiveBrief brief={brief} phase={phase} lit={lit} />
+          {error && (
+            <p
+              role="alert"
+              className="max-w-3xl mx-auto mb-3 text-[12.5px] text-neg font-mono"
+            >
+              ⚠ {error} — showing the last brief.
+            </p>
+          )}
+          <LiveBrief
+            brief={brief}
+            phase={phase}
+            lit={lit}
+            elapsed={elapsed}
+            live={IS_LIVE}
+          />
         </div>
       </main>
 

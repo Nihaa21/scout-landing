@@ -40,10 +40,14 @@ export default function LiveBrief({
   brief,
   phase,
   lit,
+  elapsed = 0,
+  live = false,
 }: {
   brief: Brief;
   phase: Phase;
   lit: number; // completed steps: sources 0..n, then teardown = n+1
+  elapsed?: number; // seconds since the run started (for the live loading state)
+  live?: boolean; // true when calling the real agent (multi-minute)
 }) {
   const steps = [...brief.sources, "teardown…"];
 
@@ -79,7 +83,15 @@ export default function LiveBrief({
           <SourceStep
             key={s}
             label={s}
-            state={i < lit ? "done" : i === lit && phase === "scouting" ? "active" : "todo"}
+            state={
+              phase === "done"
+                ? "done"
+                : i < lit
+                  ? "done"
+                  : i === lit
+                    ? "active"
+                    : "todo"
+            }
           />
         ))}
       </ul>
@@ -185,6 +197,17 @@ export default function LiveBrief({
           <p className="font-mono text-[11px] text-ink-faint breathe">
             reading sources…
           </p>
+          {live && (
+            <p className="font-mono text-[11px] text-ink-faint mt-3 leading-relaxed">
+              scout is doing live research — this takes a few minutes
+              {elapsed > 0 && (
+                <>
+                  {" "}
+                  · <span className="text-ink-soft">{elapsed}s</span>
+                </>
+              )}
+            </p>
+          )}
         </div>
       )}
     </section>

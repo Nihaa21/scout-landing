@@ -100,16 +100,38 @@ export const MOCK_BRIEF: Brief = {
   ],
 };
 
+/** True when a real backend is configured. Exposed so the UI can show an honest
+ *  "this takes a few minutes" state only when it's actually calling the agent. */
+export const IS_LIVE = Boolean(process.env.NEXT_PUBLIC_API_URL);
+
 export async function fetchBrief(product: string): Promise<Brief> {
-  /* ── API seam ──────────────────────────────────────────────────────
-     When the Scout backend is live, replace the mock return with:
+  const base = process.env.NEXT_PUBLIC_API_URL;
 
-       const res = await fetch(
-         `${process.env.NEXT_PUBLIC_API_URL}/research?product=${encodeURIComponent(product)}`
-       );
-       return res.json();
+  // No backend configured → instant mock (great for a snappy demo).
+  if (!base) {
+    return { ...MOCK_BRIEF, product: product || MOCK_BRIEF.product };
+  }
 
-     The component layer only knows the Brief shape — nothing else moves.
-     ─────────────────────────────────────────────────────────────────── */
-  return { ...MOCK_BRIEF, product: product || MOCK_BRIEF.product };
+  // Live: call the Scout agent. A real run takes ~2-5 min (2 Claude synthesis
+  // passes + Firecrawl competitive teardown), so there's no client timeout.
+  const res = await fetch(`${base.replace(/\/$/, "")}/research`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product }),
+  });
+  if (!res.ok) {
+    throw new Error(`Scout API returned ${res.status}`);
+  }
+  const d = await res.json();
+
+  // Map the API payload to the Brief shape. Only rename: one_thing → oneThing;
+  // themes/teardown fields already line up 1:1.
+  return {
+    product: d.product ?? product,
+    signals: d.signals ?? 0,
+    sources: d.sources ?? [],
+    oneThing: d.one_thing ?? "",
+    themes: d.themes ?? [],
+    teardown: d.teardown ?? [],
+  };
 }
