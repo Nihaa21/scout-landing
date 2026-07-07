@@ -52,12 +52,12 @@ function Divider() {
 
 /* Voice-waveform flanks for the signals hero — bars swell toward the number,
    echoing the VoC waveform in the page backdrop. */
-const WAVE_BARS = [10, 20, 14, 28, 18, 38, 26, 50, 34, 62];
+const WAVE_BARS = [6, 11, 8, 15, 10, 20, 14, 27, 18, 34];
 function SignalWave({ flip = false }: { flip?: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 hidden md:flex items-center gap-[7px] ${
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 hidden md:flex items-center gap-[6px] ${
         flip ? "right-8 lg:right-14 flex-row-reverse" : "left-8 lg:left-14"
       }`}
     >
@@ -67,7 +67,7 @@ function SignalWave({ flip = false }: { flip?: boolean }) {
           initial={{ scaleY: 0.25, opacity: 0 }}
           animate={{ scaleY: 1, opacity: 0.12 + i * 0.06 }}
           transition={{ delay: 0.35 + i * 0.06, duration: 0.5, ease: EASE }}
-          className="w-[5px] rounded-full bg-accent origin-center"
+          className="w-[4px] rounded-full bg-accent origin-center"
           style={{ height: h }}
         />
       ))}
@@ -178,11 +178,11 @@ export default function LiveBrief({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <div className="relative overflow-hidden rounded-[16px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-10 sm:py-12 text-center">
+            <div className="relative overflow-hidden rounded-[12px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-5 sm:py-6 text-center">
               <SignalWave />
               <SignalWave flip />
 
-              <p className="flex items-center justify-center gap-2.5 font-mono text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.22em] text-ink-soft">
+              <p className="flex items-center justify-center gap-2.5 font-mono text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-ink-soft">
                 <span aria-hidden="true" className="relative flex size-2">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-accent ping-ring" />
                   <span className="relative inline-flex size-2 rounded-full bg-accent blink" />
@@ -190,13 +190,13 @@ export default function LiveBrief({
                 Signals Captured
               </p>
 
-              <p className="mt-4 text-[72px] sm:text-[104px] leading-none font-bold tabular-nums text-accent tracking-[-0.04em]">
+              <p className="mt-2 text-[38px] sm:text-[48px] leading-none font-bold tabular-nums text-accent tracking-[-0.03em]">
                 <CountUp value={brief.signals} delay={0.25} />
               </p>
 
               {/* provenance — logos only, no counts */}
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-                <span className="font-mono text-[10.5px] text-ink-faint">Read Live From</span>
+              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
+                <span className="font-mono text-[12.5px] font-semibold text-ink-soft">Read Live From</span>
                 {brief.sources.map((s, i) => {
                   const label = prettySource(s);
                   return (
@@ -205,9 +205,9 @@ export default function LiveBrief({
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 + i * 0.1, duration: 0.4, ease: EASE }}
-                      className="flex items-center gap-1.5 text-[12px] text-ink-soft"
+                      className="flex items-center gap-2 text-[14px] font-medium text-ink"
                     >
-                      <PlatformLogo name={label} colored className="size-[15px]" />
+                      <PlatformLogo name={label} colored className="size-[20px]" />
                       {label.replace(/\b\w/g, (c) => c.toUpperCase())}
                     </motion.span>
                   );
