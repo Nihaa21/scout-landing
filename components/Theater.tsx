@@ -29,7 +29,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 const STAGE_COPY: Record<TheaterStage, [string, string]> = {
   routing: ["Routing Sources", "Deciding where the signal lives for this subject"],
   gathering: ["Reading The Crowd", "Every selected platform, scraped in parallel"],
-  synthesizing: ["Synthesizing Signals", "Clustering every voice into ranked themes"],
+  synthesizing: ["Synthesizing Signals", "Clustering every voice into ranked signals"],
   teardown: ["Tearing Down Competitors", "G2 · Capterra · pricing pages · news"],
   competitive: ["Building The Strategy", "Positioning · five forces · whitespace · your first 90 days"],
 };

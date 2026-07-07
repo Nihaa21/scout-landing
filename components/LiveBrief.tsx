@@ -96,7 +96,7 @@ export default function LiveBrief({
   const kpis: [string, number][] = brief
     ? [
         ["Signals Read", brief.signals],
-        ["Themes Found", brief.themes.length],
+        ["Key Signals", brief.themes.length],
         ["Competitors Analyzed", Math.max(brief.teardown.length, brief.competitive.battle_table?.length ?? 0)],
         ["Questions To Ask", brief.interview.length],
       ]
@@ -198,7 +198,7 @@ export default function LiveBrief({
           {/* Themes */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="mt-14">
             <motion.div variants={riseIn}>
-              <SectionHead kicker="What The Crowd Says" title="Themes" sub="Ranked by frequency × severity" />
+              <SectionHead kicker="What The Crowd Says" title="Signals" sub="Ranked by frequency × severity" />
             </motion.div>
             <div className="grid gap-3.5 md:grid-cols-2">
               {brief.themes.map((t) => {
