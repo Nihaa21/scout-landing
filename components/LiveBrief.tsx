@@ -50,6 +50,31 @@ function Divider() {
   return <div className="hairline-t mt-14 pt-10" />;
 }
 
+/* Voice-waveform flanks for the signals hero — bars swell toward the number,
+   echoing the VoC waveform in the page backdrop. */
+const WAVE_BARS = [10, 20, 14, 28, 18, 38, 26, 50, 34, 62];
+function SignalWave({ flip = false }: { flip?: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 hidden md:flex items-center gap-[7px] ${
+        flip ? "right-8 lg:right-14 flex-row-reverse" : "left-8 lg:left-14"
+      }`}
+    >
+      {WAVE_BARS.map((h, i) => (
+        <motion.span
+          key={i}
+          initial={{ scaleY: 0.25, opacity: 0 }}
+          animate={{ scaleY: 1, opacity: 0.12 + i * 0.06 }}
+          transition={{ delay: 0.35 + i * 0.06, duration: 0.5, ease: EASE }}
+          className="w-[5px] rounded-full bg-accent origin-center"
+          style={{ height: h }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function Severity({ n }: { n: number }) {
   return (
     <span className="inline-flex items-center gap-[3px]" aria-label={`severity ${n} of 5`}>
@@ -92,15 +117,6 @@ export default function LiveBrief({
 
   // Always show the subject with a capitalized first letter.
   const displayProduct = product ? product[0].toUpperCase() + product.slice(1) : product;
-
-  const kpis: [string, number][] = brief
-    ? [
-        ["Signals Read", brief.signals],
-        ["Key Signals", brief.themes.length],
-        ["Competitors Analyzed", Math.max(brief.teardown.length, brief.competitive.battle_table?.length ?? 0)],
-        ["Questions To Ask", brief.interview.length],
-      ]
-    : [];
 
   return (
     <section
@@ -156,43 +172,48 @@ export default function LiveBrief({
         <Theater stage={stage} roster={roster} statuses={statuses} elapsed={elapsed} live={live} />
       ) : (
         <div className="px-6 py-8 sm:px-8 sm:py-10">
-          {/* sources read — logos + names */}
+          {/* signals hero — ONE number, front and center */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-8"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
           >
-            <span className="font-mono text-[11px] font-semibold text-ink-soft">Read From</span>
-            {brief.sources.map((s, i) => {
-              const label = prettySource(s);
-              return (
-                <motion.span
-                  key={s}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1, duration: 0.4, ease: EASE }}
-                  className="flex items-center gap-1.5 text-[12.5px] text-ink"
-                >
-                  <PlatformLogo name={label} colored className="size-[16px]" />
-                  {label.replace(/\b\w/g, (c) => c.toUpperCase())}
-                </motion.span>
-              );
-            })}
-          </motion.div>
+            <div className="relative overflow-hidden rounded-[16px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-10 sm:py-12 text-center">
+              <SignalWave />
+              <SignalWave flip />
 
-          {/* KPI band */}
-          <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {kpis.map(([label, value], i) => (
-              <motion.div key={label} variants={riseIn}>
-                <Card className="px-5 py-4 hover:border-accent/40">
-                  <p className="text-[28px] leading-none font-bold tabular-nums">
-                    <CountUp value={value} delay={0.3 + i * 0.12} />
-                  </p>
-                  <p className="font-mono text-[10.5px] font-semibold text-ink-soft mt-2">{label}</p>
-                </Card>
-              </motion.div>
-            ))}
+              <p className="flex items-center justify-center gap-2.5 font-mono text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.22em] text-ink-soft">
+                <span aria-hidden="true" className="relative flex size-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-accent ping-ring" />
+                  <span className="relative inline-flex size-2 rounded-full bg-accent blink" />
+                </span>
+                Signals Captured
+              </p>
+
+              <p className="mt-4 text-[72px] sm:text-[104px] leading-none font-bold tabular-nums text-accent tracking-[-0.04em]">
+                <CountUp value={brief.signals} delay={0.25} />
+              </p>
+
+              {/* provenance — logos only, no counts */}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                <span className="font-mono text-[10.5px] text-ink-faint">Read Live From</span>
+                {brief.sources.map((s, i) => {
+                  const label = prettySource(s);
+                  return (
+                    <motion.span
+                      key={s}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + i * 0.1, duration: 0.4, ease: EASE }}
+                      className="flex items-center gap-1.5 text-[12px] text-ink-soft"
+                    >
+                      <PlatformLogo name={label} colored className="size-[15px]" />
+                      {label.replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </motion.span>
+                  );
+                })}
+              </div>
+            </div>
           </motion.div>
 
           {/* Themes */}
