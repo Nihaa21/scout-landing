@@ -52,7 +52,7 @@ function Divider() {
 
 /* Voice-waveform flanks for the signals hero — bars swell toward the number,
    echoing the VoC waveform in the page backdrop. */
-const WAVE_BARS = [6, 11, 8, 15, 10, 20, 14, 27, 18, 34];
+const WAVE_BARS = [5, 9, 7, 12, 8, 16, 11, 21, 14, 26];
 function SignalWave({ flip = false }: { flip?: boolean }) {
   return (
     <div
@@ -178,7 +178,7 @@ export default function LiveBrief({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <div className="relative overflow-hidden rounded-[12px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-5 sm:py-6 text-center">
+            <div className="relative overflow-hidden rounded-[12px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-4 sm:py-5 text-center">
               <SignalWave />
               <SignalWave flip />
 
@@ -190,12 +190,12 @@ export default function LiveBrief({
                 Signals Captured
               </p>
 
-              <p className="mt-2 text-[38px] sm:text-[48px] leading-none font-bold tabular-nums text-accent tracking-[-0.03em]">
+              <p className="mt-1.5 text-[32px] sm:text-[40px] leading-none font-bold tabular-nums text-accent tracking-[-0.03em]">
                 <CountUp value={brief.signals} delay={0.25} />
               </p>
 
               {/* provenance — logos only, no counts */}
-              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
                 <span className="font-mono text-[12.5px] font-semibold text-ink-soft">Read Live From</span>
                 {brief.sources.map((s, i) => {
                   const label = prettySource(s);
