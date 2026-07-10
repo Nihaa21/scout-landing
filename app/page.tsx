@@ -118,10 +118,20 @@ export default function Home() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className={`no-print max-w-2xl mx-auto text-center ${showBrief ? "pt-12 sm:pt-16 pb-10" : "pt-24 sm:pt-36 pb-16"}`}
         >
-          {/* branding — big, center */}
-          <p className="text-[52px] sm:text-[68px] leading-none font-semibold tracking-[-0.04em]">
-            Scout
-          </p>
+          {/* branding — big, center, with a soft accent glow behind it */}
+          <div className="relative inline-block">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[150%] w-[185%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(31,111,191,0.28), rgba(31,111,191,0.09) 45%, transparent 72%)",
+              }}
+            />
+            <p className="text-[52px] sm:text-[70px] leading-none font-semibold tracking-[-0.045em]">
+              Scout
+            </p>
+          </div>
           <div className="mt-4 flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-[var(--color-hairline)]" />
             <p className="font-mono text-[13px] sm:text-[14px] tracking-[0.12em] uppercase text-accent">

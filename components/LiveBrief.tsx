@@ -50,25 +50,22 @@ function Divider() {
   return <div className="hairline-t mt-14 pt-10" />;
 }
 
-/* Voice-waveform flanks for the signals hero — bars swell toward the number,
-   echoing the VoC waveform in the page backdrop. */
-const WAVE_BARS = [5, 9, 7, 12, 8, 16, 11, 21, 14, 26];
+/* Voice-waveform flanks for the signals hero — bars pulse continuously like an
+   audio visualizer, swelling toward the number. */
+const WAVE_BARS = [6, 11, 8, 15, 10, 20, 14, 26, 18, 34];
 function SignalWave({ flip = false }: { flip?: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 hidden md:flex items-center gap-[6px] ${
-        flip ? "right-8 lg:right-14 flex-row-reverse" : "left-8 lg:left-14"
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 hidden md:flex items-center gap-[5px] ${
+        flip ? "right-9 lg:right-16 flex-row-reverse" : "left-9 lg:left-16"
       }`}
     >
       {WAVE_BARS.map((h, i) => (
-        <motion.span
+        <span
           key={i}
-          initial={{ scaleY: 0.25, opacity: 0 }}
-          animate={{ scaleY: 1, opacity: 0.12 + i * 0.06 }}
-          transition={{ delay: 0.35 + i * 0.06, duration: 0.5, ease: EASE }}
-          className="w-[4px] rounded-full bg-accent origin-center"
-          style={{ height: h }}
+          className="wave-bar w-[4px] rounded-full bg-gradient-to-t from-accent-deep to-accent-bright"
+          style={{ height: h, opacity: 0.22 + i * 0.055, animationDelay: `${i * 0.11}s` }}
         />
       ))}
     </div>
@@ -121,7 +118,7 @@ export default function LiveBrief({
   return (
     <section
       aria-label={`Research brief for ${displayProduct}`}
-      className="print-root hairline rounded-[14px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/70 backdrop-blur-[2px]"
+      className="print-root hairline rounded-[20px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/80 backdrop-blur-[3px] elev-float"
     >
       {/* header — product centered + prominent live/signals */}
       <header
@@ -178,25 +175,41 @@ export default function LiveBrief({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <div className="relative overflow-hidden rounded-[12px] hairline bg-gradient-to-b from-accent-deep/[0.06] via-transparent to-transparent px-6 py-4 sm:py-5 text-center">
+            <div className="relative overflow-hidden rounded-[18px] hairline bg-gradient-to-b from-accent-deep/[0.09] via-surface/50 to-surface/20 px-6 py-6 sm:py-7 text-center elev-1">
+              {/* faint top sheen for a glassy finish */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent"
+              />
               <SignalWave />
               <SignalWave flip />
 
-              <p className="flex items-center justify-center gap-2.5 font-mono text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-ink-soft">
+              {/* live pill */}
+              <span className="inline-flex items-center gap-2 rounded-full bg-accent/[0.08] hairline border-accent/20 px-3 py-1 font-mono text-[10px] sm:text-[10.5px] font-bold uppercase tracking-[0.2em] text-accent-deep">
                 <span aria-hidden="true" className="relative flex size-2">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-accent ping-ring" />
                   <span className="relative inline-flex size-2 rounded-full bg-accent blink" />
                 </span>
-                Signals Captured
-              </p>
+                Live · Signals Captured
+              </span>
 
-              <p className="mt-1.5 text-[32px] sm:text-[40px] leading-none font-bold tabular-nums text-accent tracking-[-0.03em]">
-                <CountUp value={brief.signals} delay={0.25} />
-              </p>
+              {/* the number — gradient fill + glow halo */}
+              <div className="relative mt-2.5">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-16 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+                  style={{ background: "radial-gradient(ellipse at center, rgba(31,111,191,0.3), transparent 70%)" }}
+                />
+                <p className="bg-gradient-to-br from-accent-deep via-accent to-accent-bright bg-clip-text text-[46px] sm:text-[60px] leading-none font-bold tabular-nums tracking-[-0.035em] text-transparent">
+                  <CountUp value={brief.signals} delay={0.25} />
+                </p>
+              </div>
 
               {/* provenance — logos only, no counts */}
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
-                <span className="font-mono text-[12.5px] font-semibold text-ink-soft">Read Live From</span>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 border-t-[0.5px] border-[var(--color-hairline)] pt-4">
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+                  Read Live From
+                </span>
                 {brief.sources.map((s, i) => {
                   const label = prettySource(s);
                   return (
@@ -205,9 +218,9 @@ export default function LiveBrief({
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 + i * 0.1, duration: 0.4, ease: EASE }}
-                      className="flex items-center gap-2 text-[14px] font-medium text-ink"
+                      className="flex items-center gap-1.5 rounded-full bg-surface/70 hairline px-2.5 py-1 text-[12.5px] font-medium text-ink"
                     >
-                      <PlatformLogo name={label} colored className="size-[20px]" />
+                      <PlatformLogo name={label} colored className="size-[16px]" />
                       {label.replace(/\b\w/g, (c) => c.toUpperCase())}
                     </motion.span>
                   );
@@ -231,7 +244,7 @@ export default function LiveBrief({
                     variants={riseIn}
                     whileHover={{ y: -3 }}
                     transition={{ duration: 0.25, ease: EASE }}
-                    className="hairline rounded-[12px] p-5 bg-surface/60 hover:border-accent/50 transition-colors duration-300 break-inside-avoid"
+                    className="hairline rounded-[14px] p-5 bg-surface/75 elev-1 elev-hover hover:border-accent/50 transition-colors duration-300 break-inside-avoid"
                   >
                     <h3 className="text-[15px] font-semibold leading-snug">{t.title}</h3>
                     <p className="mt-2 font-mono text-[11px] text-ink-soft flex flex-wrap items-center gap-x-2">
