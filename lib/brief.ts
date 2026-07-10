@@ -29,6 +29,7 @@ export interface TeardownRow {
 export interface InterviewQ {
   question: string;
   why: string; // the decision this answer unlocks
+  grounded_in?: string; // the specific signal this question is built on
 }
 
 export interface Pain {
@@ -91,6 +92,15 @@ export interface Competitive {
   strategy?: Strategy;
 }
 
+export type ConfidenceLevel = "solid" | "moderate" | "directional";
+
+export interface Confidence {
+  level: ConfidenceLevel;
+  headline: string;
+  notes: string[];
+  source_mix: { source: string; count: number }[];
+}
+
 export interface Brief {
   product: string;
   signals: number;
@@ -102,6 +112,7 @@ export interface Brief {
   pains: Pain[];
   targets: Targets;
   competitive: Competitive;
+  confidence?: Confidence;
 }
 
 /* Mock data — language lifted from real Scout runs on "Jobber". */
@@ -109,6 +120,16 @@ export const MOCK_BRIEF: Brief = {
   product: "Jobber",
   signals: 243,
   sources: ["hacker news", "youtube", "app store"],
+  confidence: {
+    level: "moderate",
+    headline: "Moderate confidence",
+    notes: ["68% from App Store — narrow base", "most themes rest on just a few mentions"],
+    source_mix: [
+      { source: "appstore", count: 165 },
+      { source: "youtube", count: 58 },
+      { source: "hackernews", count: 20 },
+    ],
+  },
   oneThing:
     "Owners run their whole day on Jobber — and feel punished for it at exactly two moments: payouts and the pricing page.",
   themes: [
@@ -182,11 +203,13 @@ export const MOCK_BRIEF: Brief = {
       question:
         "Walk me through the last time a payout was delayed — what did it cost you that week, in dollars and in stress?",
       why: "Sizes the payment-hold pain in real money → pricing for an instant-payout tier",
+      grounded_in: "They held an $8,000 payment for six days with no explanation. I had payroll due Friday.",
     },
     {
       question:
         "If one locked feature moved down a tier, which would change your week — and why that one?",
       why: "Reveals which paywall actually drives upgrade resentment vs. acceptance",
+      grounded_in: "Every feature I actually need lives one tier up. It feels engineered.",
     },
     {
       question:
@@ -410,6 +433,7 @@ function mapBrief(d: Record<string, unknown>, product: string): Brief {
       pains_to_mine: t.pains_to_mine ?? [],
     },
     competitive: (d.competitive as Competitive) ?? {},
+    confidence: (d.confidence as Confidence) ?? undefined,
   };
 }
 
