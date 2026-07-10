@@ -29,7 +29,7 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
    edge, and the plot itself reads like graph paper with the winning quadrant
    tinted. */
 function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
-  const W = 640, H = 520, ML = 24, MR = 24, MT = 46, MB = 88;
+  const W = 640, H = 548, ML = 24, MR = 24, MT = 46, MB = 116;
   const PW = W - ML - MR, PH = H - MT - MB;
   const px = (v: number) => ML + (Math.min(100, Math.max(0, v)) / 100) * PW;
   const py = (v: number) => MT + PH - (Math.min(100, Math.max(0, v)) / 100) * PH;
@@ -82,16 +82,16 @@ function PositioningMap({ p }: { p: NonNullable<Competitive["positioning"]> }) {
           stroke="var(--color-ink-faint)" strokeWidth="1" strokeDasharray="2 6" strokeLinecap="round" opacity="0.6" />
 
         {/* y-axis ends — above and below the plot, never rotated */}
-        {halo(W / 2, MT - 14, "middle", "var(--color-accent)", 11, 700, true, `▲ ${p.y_axis.high}`)}
-        {halo(W / 2, MT + PH + 44, "middle", "var(--color-ink-soft)", 11, 700, true, `▼ ${p.y_axis.low}`)}
+        {halo(W / 2, MT - 15, "middle", "var(--color-accent)", 15, 700, true, `▲ ${p.y_axis.high}`)}
+        {halo(W / 2, MT + PH + 46, "middle", "var(--color-ink-soft)", 15, 700, true, `▼ ${p.y_axis.low}`)}
 
         {/* x-axis ends — bottom corners */}
-        {halo(ML + 2, MT + PH + 22, "start", "var(--color-ink-soft)", 11, 700, true, `◀ ${p.x_axis.low}`)}
-        {halo(W - MR - 2, MT + PH + 22, "end", "var(--color-accent)", 11, 700, true, `${p.x_axis.high} ▶`)}
+        {halo(ML + 2, MT + PH + 23, "start", "var(--color-ink-soft)", 15, 700, true, `◀ ${p.x_axis.low}`)}
+        {halo(W - MR - 2, MT + PH + 23, "end", "var(--color-accent)", 15, 700, true, `${p.x_axis.high} ▶`)}
 
-        {/* axis titles — one quiet caption line */}
-        {halo(W / 2, H - 14, "middle", "var(--color-ink-faint)", 10, 500, true,
-          `x · ${p.x_axis.label}   |   y · ${p.y_axis.label}`)}
+        {/* axis names — split onto two lines so each stays large & readable */}
+        {halo(W / 2, H - 34, "middle", "var(--color-ink)", 15, 700, true, `x · ${p.x_axis.label}`)}
+        {halo(W / 2, H - 12, "middle", "var(--color-ink)", 15, 700, true, `y · ${p.y_axis.label}`)}
 
         {p.players.map((pl, i) => {
           const cx = px(pl.x), cy = py(pl.y);

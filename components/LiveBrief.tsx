@@ -319,14 +319,6 @@ export default function LiveBrief({
                           → {q.why}
                         </p>
                       )}
-                      {q.grounded_in && (
-                        <p className="mt-2 text-[11.5px] text-ink-soft leading-relaxed">
-                          <span className="font-mono text-[9px] uppercase tracking-wide text-ink-faint mr-1.5">
-                            From signal
-                          </span>
-                          <span className="italic">“{q.grounded_in}”</span>
-                        </p>
-                      )}
                     </div>
                   </motion.div>
                 ))}
