@@ -7,7 +7,7 @@ import PlatformLogo from "@/components/PlatformLogo";
 import Theater, { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
 import CountUp from "@/components/motion/CountUp";
 import { Card } from "@/components/ui/card";
-import type { Brief, Confidence, ConfidenceLevel, Sentiment } from "@/lib/brief";
+import type { Brief, Sentiment } from "@/lib/brief";
 
 export type Phase = "scouting" | "done";
 
@@ -48,76 +48,6 @@ function SectionHead({
 
 function Divider() {
   return <div className="hairline-t mt-14 pt-10" />;
-}
-
-/* Honest read on how much to trust the brief — level chip + caveats + a
-   source-mix bar you can *see* the concentration in. */
-const SRC_COLOR: Record<string, string> = {
-  hackernews: "#FF6600",
-  youtube: "#FF0000",
-  appstore: "#2072F3",
-  bluesky: "#1185FE",
-  web: "#1F6FBF",
-  reddit: "#FF4500",
-};
-const SRC_NAME: Record<string, string> = {
-  hackernews: "Hacker News",
-  appstore: "App Store",
-  web: "Open Web",
-  youtube: "YouTube",
-  bluesky: "Bluesky",
-  reddit: "Reddit",
-};
-const LEVEL_STYLE: Record<ConfidenceLevel, { dot: string; chip: string }> = {
-  solid: { dot: "bg-pos", chip: "bg-pos/10 text-pos" },
-  moderate: { dot: "bg-mid", chip: "bg-mid/10 text-mid" },
-  directional: { dot: "bg-ink-faint", chip: "bg-ink/[0.06] text-ink-soft" },
-};
-
-function ConfidenceStrip({ c }: { c: Confidence }) {
-  const total = c.source_mix.reduce((s, m) => s + m.count, 0) || 1;
-  const st = LEVEL_STYLE[c.level] ?? LEVEL_STYLE.moderate;
-  const color = (s: string) => SRC_COLOR[s] ?? "var(--color-ink-soft)";
-  const name = (s: string) => SRC_NAME[s] ?? s;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4, duration: 0.5, ease: EASE }}
-      className="mt-3 rounded-[11px] hairline bg-surface/50 px-4 py-3"
-    >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${st.chip}`}>
-          <span aria-hidden="true" className={`size-[7px] rounded-full ${st.dot}`} />
-          {c.headline}
-        </span>
-        <span className="text-[12px] text-ink-soft leading-snug">{c.notes.join("  ·  ")}</span>
-      </div>
-
-      {/* proportional source-mix bar — dominance is visible at a glance */}
-      {c.source_mix.length > 0 && (
-        <>
-          <div className="mt-2.5 flex h-[7px] w-full overflow-hidden rounded-full bg-ink/[0.04]">
-            {c.source_mix.map((m) => (
-              <div
-                key={m.source}
-                title={`${name(m.source)}: ${m.count}`}
-                style={{ width: `${(m.count / total) * 100}%`, background: color(m.source) }}
-              />
-            ))}
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[10px] text-ink-faint">
-            {c.source_mix.map((m) => (
-              <span key={m.source} className="inline-flex items-center gap-1">
-                <span aria-hidden="true" className="size-[7px] rounded-[2px]" style={{ background: color(m.source) }} />
-                {name(m.source)} {Math.round((m.count / total) * 100)}%
-              </span>
-            ))}
-          </div>
-        </>
-      )}
-    </motion.div>
-  );
 }
 
 /* Voice-waveform flanks for the signals hero — bars swell toward the number,
@@ -285,9 +215,6 @@ export default function LiveBrief({
               </div>
             </div>
           </motion.div>
-
-          {/* representativeness — how much to trust this brief */}
-          {brief.confidence && <ConfidenceStrip c={brief.confidence} />}
 
           {/* Themes */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="mt-14">
