@@ -31,7 +31,7 @@ const STAGE_COPY: Record<TheaterStage, [string, string]> = {
   gathering: ["Reading The Crowd", "Every selected platform, scraped in parallel"],
   synthesizing: ["Synthesizing Signals", "Clustering every voice into ranked signals"],
   teardown: ["Tearing Down Competitors", "G2 · Capterra · pricing pages · news"],
-  competitive: ["Building The Strategy", "Positioning · five forces · whitespace · your first 90 days"],
+  competitive: ["Building Competitive Positioning", "Positioning · five forces · whitespace · your first 90 days"],
 };
 
 function Row({ name, status }: { name: string; status: SourceStatus }) {

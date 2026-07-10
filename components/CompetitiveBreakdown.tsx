@@ -154,20 +154,12 @@ function FiveForces({ forces }: { forces: NonNullable<Competitive["five_forces"]
         <div key={f.force} className="hairline-b pb-4 last:border-b-0 last:pb-0">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[13px] font-semibold">{f.force}</p>
-            <div className="flex items-center gap-1 shrink-0"
-              aria-label={`${f.score} out of 10 — ${f.level}`}>
-              {Array.from({ length: 10 }).map((_, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, scaleX: 0 }}
-                  whileInView={{ opacity: 1, scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 + fi * 0.08 + i * 0.025, duration: 0.25 }}
-                  className={`h-[3px] w-2.5 rounded-full origin-left ${i < f.score ? "bg-accent" : "bg-ink/15"}`}
-                />
-              ))}
-              <span className="font-mono text-[10px] font-semibold text-accent ml-1.5">{f.level}</span>
-            </div>
+            <span
+              className="font-mono text-[10px] font-semibold uppercase tracking-wide text-accent shrink-0"
+              aria-label={`${f.level} (${f.score} out of 10)`}
+            >
+              {f.level}
+            </span>
           </div>
           <p className="text-[12px] text-ink-soft leading-relaxed mt-1.5">{f.insight}</p>
         </div>
