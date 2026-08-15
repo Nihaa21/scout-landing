@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Scout Brain — test console</title>
+<style>
+  :root{
+    --paper:#fbfaf6; --surface:#fff; --surface-2:#f4f2ec;
+    --ink:#1a1916; --ink-soft:#57544d; --ink-faint:#9b968c;
+    --hair:rgba(26,25,22,.14); --hair-2:rgba(26,25,22,.24);
+    --accent:#1f6fbf; --accent-deep:#185fa5; --accent-soft:rgba(31,111,191,.10);
+    --pos:#2f8a52; --pos-soft:rgba(47,138,82,.12);
+    --mid:#b5851f; --mid-soft:rgba(181,133,31,.14);
+    --neg:#c0483b; --neg-soft:rgba(192,72,59,.10);
+    --sans:"Geist","Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --paper:#161512; --surface:#201e19; --surface-2:#26241e;
+    --ink:#f3f0e9; --ink-soft:#b3ada1; --ink-faint:#847f74;
+    --hair:rgba(244,241,234,.12); --hair-2:rgba(244,241,234,.2);
+    --accent:#4d9fe0; --accent-deep:#378add; --accent-soft:rgba(77,159,224,.14);
+    --pos:#4fae74; --pos-soft:rgba(79,174,116,.16);
+    --mid:#d3a63f; --mid-soft:rgba(211,166,63,.16);
+    --neg:#d96a5c; --neg-soft:rgba(217,106,92,.16);
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 22px 90px}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .word{font-weight:600;font-size:22px;letter-spacing:-.02em}
+  .word b{color:var(--accent)}
+  .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .lede{color:var(--ink-soft);font-size:14px;margin:0 0 22px}
+  .card{background:var(--surface);border:.5px solid var(--hair-2);border-radius:12px;padding:20px}
+  .card + .card{margin-top:16px}
+  .sechead{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px}
+  label{display:block;font-size:12.5px;font-weight:550;margin:0 0 6px;color:var(--ink-soft)}
+  input,textarea,select{width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--surface);
+    border:.5px solid var(--hair-2);border-radius:9px;padding:10px 12px;line-height:1.5}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  textarea{resize:vertical;min-height:70px}
+  .row{display:grid;grid-template-columns:1fr 180px 120px;gap:14px}
+  @media (max-width:640px){.row{grid-template-columns:1fr}}
+  .field{margin-bottom:14px}
+  .btn{font-family:var(--sans);font-size:14px;font-weight:600;border-radius:10px;padding:11px 22px;cursor:pointer;
+    border:.5px solid var(--accent);background:var(--accent);color:#fff}
+  .btn:hover{background:var(--accent-deep)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .row2{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .muted{font-size:12px;color:var(--ink-faint)}
+  .cfg{font-family:var(--mono);font-size:12px}
+  .spinner{width:15px;height:15px;border:2px solid var(--hair-2);border-top-color:var(--accent);border-radius:50%;
+    display:inline-block;animation:spin .8s linear infinite;vertical-align:-2px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hidden{display:none}
+  .err{color:var(--neg);background:var(--neg-soft);border:.5px solid var(--neg);border-radius:9px;padding:10px 12px;font-size:13px}
+
+  .meterrow{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+  .big{font-family:var(--mono);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent)}
+  .big small{font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 8px;border-bottom:.5px solid var(--hair)}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:500}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:999px}
+  .chip.pos{color:var(--pos);background:var(--pos-soft)} .chip.mid{color:var(--mid);background:var(--mid-soft)}
+  .chip.neg{color:var(--neg);background:var(--neg-soft)} .chip.acc{color:var(--accent);background:var(--accent-soft)}
+  .chip.ws{color:var(--accent);background:var(--accent-soft)}
+  ul.q{list-style:none;margin:0;padding:0}
+  ul.q li{padding:10px 0;border-bottom:.5px solid var(--hair);font-size:14px}
+  ul.q li:last-child{border-bottom:0}
+  ul.q .why{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:4px}
+  .feat{padding:14px 0;border-bottom:.5px solid var(--hair)}
+  .feat:last-child{border-bottom:0}
+  .feat .t{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+  .feat h4{margin:0;font-size:15px;font-weight:600}
+  .feat .c{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums;color:var(--pos);flex:none}
+  .feat p{margin:5px 0 0;font-size:13px;color:var(--ink-soft)}
+  .feat .ev{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:5px}
+  details{margin-top:12px;font-size:12px}
+  summary{cursor:pointer;color:var(--ink-faint);font-family:var(--mono)}
+  pre{background:var(--surface-2);border:.5px solid var(--hair);border-radius:8px;padding:12px;overflow:auto;font-size:11px;max-height:300px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="word">Scout<b>.</b> brain</span><span class="tag">test console</span></header>
+  <p class="lede">Give it a subject and the build you're working on. It researches, scores its own confidence, and pauses with interview questions — then you feed back what you heard and it proposes ranked features.</p>
+
+  <!-- INPUT A -->
+  <div class="card">
+    <p class="sechead">1 · Input — subject + current build</p>
+    <div class="row">
+      <div><label>Product or industry</label><input id="subject" placeholder="e.g. Notion, or: AI tools for home-cleaning businesses"></div>
+      <div><label>Mode</label><select id="mode"><option value="product">product</option><option value="industry">industry</option></select></div>
+      <div><label>Loops (budget)</label><input id="budget" type="number" value="3" min="1" max="6"></div>
+    </div>
+    <div class="field"><label>Current build (optional — release notes, a Jira link, or a description)</label>
+      <textarea id="build" placeholder="e.g. v3 adds an AI assistant that auto-summarizes support tickets and posts to the channel without confirmation."></textarea></div>
+    <div class="row2">
+      <button class="btn" id="runBtn" onclick="runStart()">Run Scout</button>
+      <span id="startStatus" class="muted"></span>
+    </div>
+    <div id="startErr" class="err hidden" style="margin-top:12px"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card hidden" id="step4card">
+    <p class="sechead">2 · Step 4 output — what the research resolved (it paused here)</p>
+    <div class="meterrow">
+      <div class="big" id="resolveNum">—</div>
+      <div><div style="font-weight:600" id="resolveLabel">resolved</div><div class="muted" id="gapLabel"></div></div>
+    </div>
+    <p class="sechead" style="margin-top:8px">Ranked signals · frequency × severity</p>
+    <div style="overflow-x:auto"><table id="sigTable"><thead><tr><th>Signal</th><th>Freq</th><th>Sev</th><th>Score</th><th>Whitespace</th></tr></thead><tbody></tbody></table></div>
+    <p class="sechead" style="margin-top:20px">Assumptions · scored by Claude</p>
+    <div style="overflow-x:auto"><table id="asmTable"><thead><tr><th>Assumption</th><th>Status</th><th>Support</th><th>Resolved</th></tr></thead><tbody></tbody></table></div>
+    <p class="sechead" style="margin-top:20px">Interview questions · the human-in-the-loop gap</p>
+    <ul class="q" id="qList"></ul>
+    <details><summary>raw step 4 json</summary><pre id="step4raw"></pre></details>
+  </div>
+
+  <!-- INPUT B -->
+  <div class="card hidden" id="fbcard">
+    <p class="sechead">3 · Feedback — what your interviews surfaced</p>
+    <div class="field"><label>Answers (one per line)</label>
+      <textarea id="answers" style="min-height:100px" placeholder="3 of 4 said they'd instantly undo an unattended change.
+Everyone read the error first, then searched.
+A beginner loved auto-fix; a senior would disable it."></textarea></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="notes" placeholder="anything else"></textarea></div>
+    <div class="row2"><button class="btn" id="resumeBtn" onclick="runResume()">Resume → propose features</button><span id="resumeStatus" class="muted"></span></div>
+    <div id="resumeErr" class="err hidden" style="margin-top:12px"></div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="card hidden" id="featcard">
+    <p class="sechead">4 · Proposed feature candidates — ranked (you decide)</p>
+    <div id="featList"></div>
+    <details><summary>raw final json</summary><pre id="featraw"></pre></details>
+  </div>
+
+  <p class="muted" style="margin-top:20px">Backend: <input id="backend" class="cfg" style="width:340px;display:inline-block;padding:5px 9px" value="https://scout-agent-lea9.onrender.com"> <span class="muted">· first call may take ~60s if the free server is asleep.</span></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var thread = null;
+  var $ = function(id){ return document.getElementById(id); };
+  function api(){ return $("backend").value.replace(/\/+$/,""); }
+  function chipClass(s){ return s==="supported"?"pos":s==="refuted"?"neg":s==="needs_human"?"acc":"mid"; }
+  function pct(x){ return Math.round((x||0)*100)+"%"; }
+
+  var timer=null, t0=0;
+  function startTimer(el){ t0=Date.now(); timer=setInterval(function(){ el.innerHTML='<span class="spinner"></span> running… '+Math.round((Date.now()-t0)/1000)+'s'; },500); }
+  function stopTimer(el,msg){ clearInterval(timer); el.textContent=msg||""; }
+
+  window.runStart = async function(){
+    var subject=$("subject").value.trim();
+    if(!subject){ $("subject").focus(); return; }
+    var body={ subject:subject, mode:$("mode").value, budget:parseInt($("budget").value)||3 };
+    var buildTxt=$("build").value.trim();
+    if(buildTxt) body.build={ kind:"text", content:buildTxt, notes:"" };
+    $("startErr").classList.add("hidden"); $("runBtn").disabled=true; startTimer($("startStatus"));
+    try{
+      var r=await fetch(api()+"/brain/start",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      var data=await r.json();
+      if(!r.ok) throw new Error(data.detail||("HTTP "+r.status));
+      thread=data.thread_id;
+      stopTimer($("startStatus"),"paused — thread "+thread);
+      renderStep4(data.step4);
+    }catch(e){
+      stopTimer($("startStatus"),""); $("startErr").textContent="Start failed: "+e.message; $("startErr").classList.remove("hidden");
+    }finally{ $("runBtn").disabled=false; }
+  };
+
+  function renderStep4(s4){
+    $("step4card").classList.remove("hidden");
+    $("resolveNum").innerHTML=pct(s4.confidence)+' <small>resolved</small>';
+    var nh=(s4.needs_human||[]).length;
+    $("gapLabel").textContent=nh+" assumption"+(nh===1?"":"s")+" only a human can close → the interview gap";
+    var sb=$("sigTable").querySelector("tbody"); sb.innerHTML="";
+    (s4.signals_ranked||[]).forEach(function(r){
+      sb.insertAdjacentHTML("beforeend","<tr><td>"+esc(r.signal)+"</td><td class='num'>"+r.frequency+"</td><td class='num'>"+r.severity+"</td><td class='num'>"+r.score+"</td><td>"+(r.whitespace?"<span class='chip ws'>whitespace</span>":"")+"</td></tr>");
+    });
+    var ab=$("asmTable").querySelector("tbody"); ab.innerHTML="";
+    (s4.assumptions||[]).forEach(function(a){
+      ab.insertAdjacentHTML("beforeend","<tr><td>"+esc(a.statement)+"</td><td><span class='chip "+chipClass(a.status)+"'>"+esc(a.status)+"</span></td><td class='num'>"+pct(a.confidence)+"</td><td class='num'>"+pct(a.resolution)+"</td></tr>");
+    });
+    var ql=$("qList"); ql.innerHTML="";
+    (s4.questions||[]).forEach(function(q){
+      ql.insertAdjacentHTML("beforeend","<li>"+esc(q.question)+(q.why?"<span class='why'>"+esc(q.why)+"</span>":"")+"</li>");
+    });
+    $("step4raw").textContent=JSON.stringify(s4,null,2);
+    $("fbcard").classList.remove("hidden");
+    $("fbcard").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  window.runResume = async function(){
+    if(!thread){ return; }
+    var answers=$("answers").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
+    var body={ thread_id:thread, answers:answers, notes:$("notes").value.trim() };
+    $("resumeErr").classList.add("hidden"); $("resumeBtn").disabled=true; startTimer($("resumeStatus"));
+    try{
+      var r=await fetch(api()+"/brain/resume",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      var data=await r.json();
+      if(!r.ok) throw new Error(data.detail||("HTTP "+r.status));
+      stopTimer($("resumeStatus"),"done");
+      renderFeatures(data.proposed_features||[], data.final||{});
+    }catch(e){
+      stopTimer($("resumeStatus"),""); $("resumeErr").textContent="Resume failed: "+e.message+" (if it says no run found, the free server may have restarted — re-run Scout).";
+      $("resumeErr").classList.remove("hidden");
+    }finally{ $("resumeBtn").disabled=false; }
+  };
+
+  function renderFeatures(feats, final){
+    $("featcard").classList.remove("hidden");
+    var fl=$("featList"); fl.innerHTML="";
+    if(!feats.length) fl.innerHTML="<p class='muted'>No candidates returned — check the raw json.</p>";
+    feats.forEach(function(f){
+      fl.insertAdjacentHTML("beforeend",
+        "<div class='feat'><div class='t'><h4>"+esc(f.title||"")+"</h4><span class='c'>"+pct(f.confidence)+"</span></div>"+
+        "<p>"+esc(f.rationale||"")+"</p>"+
+        (f.evidence?"<div class='ev'>evidence: "+esc(f.evidence)+(f.assumption_id?" · closes "+esc(f.assumption_id):"")+"</div>":"")+"</div>");
+    });
+    $("featraw").textContent=JSON.stringify(final,null,2);
+    $("featcard").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+})();
+</script>
+</body>
+</html>
