@@ -59,6 +59,10 @@
   .hidden{display:none}
   .err{color:var(--neg);background:var(--neg-soft);border:.5px solid var(--neg);border-radius:9px;padding:10px 12px;font-size:13px}
 
+  .seg{display:inline-flex;border:.5px solid var(--hair-2);border-radius:9px;overflow:hidden;margin-bottom:16px}
+  .seg-btn{font-family:var(--sans);font-size:13px;font-weight:550;padding:8px 16px;cursor:pointer;border:0;background:transparent;color:var(--ink-soft)}
+  .seg-btn + .seg-btn{border-left:.5px solid var(--hair-2)}
+  .seg-btn.on{background:var(--accent);color:#fff}
   .meterrow{display:flex;align-items:center;gap:18px;margin-bottom:16px}
   .big{font-family:var(--mono);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent)}
   .big small{font-size:14px}
@@ -128,11 +132,29 @@
   <!-- INPUT B -->
   <div class="card hidden" id="fbcard">
     <p class="sechead">3 · Feedback — what your interviews surfaced</p>
-    <div class="field"><label>Answers (one per line)</label>
-      <textarea id="answers" style="min-height:100px" placeholder="3 of 4 said they'd instantly undo an unattended change.
+    <div class="seg" id="srcToggle">
+      <button type="button" class="seg-btn on" data-src="manual" onclick="setSource('manual')">Manual paste</button>
+      <button type="button" class="seg-btn" data-src="gong" onclick="setSource('gong')">Pull from Gong</button>
+    </div>
+
+    <div id="manualPanel">
+      <div class="field"><label>Answers (one per line)</label>
+        <textarea id="answers" style="min-height:100px" placeholder="3 of 4 said they'd instantly undo an unattended change.
 Everyone read the error first, then searched.
 A beginner loved auto-fix; a senior would disable it."></textarea></div>
-    <div class="field"><label>Notes (optional)</label><textarea id="notes" placeholder="anything else"></textarea></div>
+    </div>
+
+    <div id="gongPanel" class="hidden">
+      <div class="field"><label>Gong call IDs (comma or newline separated)</label>
+        <textarea id="gongIds" style="min-height:60px" placeholder="7788990011, 7788990012, 7788990013"></textarea></div>
+      <div class="row" style="grid-template-columns:1fr 1fr">
+        <div><label>From (optional, ISO)</label><input id="gongFrom" placeholder="2026-08-01T00:00:00Z"></div>
+        <div><label>To (optional, ISO)</label><input id="gongTo" placeholder="2026-08-15T00:00:00Z"></div>
+      </div>
+      <p class="muted" style="margin:8px 0 0">Scout pulls those transcripts and distills them against the questions above — recurrence-weighted, with quotes. Needs GONG_ACCESS_KEY set on the server.</p>
+    </div>
+
+    <div class="field" style="margin-top:14px"><label>Notes (optional)</label><textarea id="notes" placeholder="anything else"></textarea></div>
     <div class="row2"><button class="btn" id="resumeBtn" onclick="runResume()">Resume → propose features</button><span id="resumeStatus" class="muted"></span></div>
     <div id="resumeErr" class="err hidden" style="margin-top:12px"></div>
   </div>
@@ -210,10 +232,24 @@ A beginner loved auto-fix; a senior would disable it."></textarea></div>
     $("fbcard").scrollIntoView({behavior:"smooth",block:"start"});
   }
 
+  var feedSource="manual";
+  window.setSource = function(s){
+    feedSource=s;
+    var btns=document.querySelectorAll("#srcToggle .seg-btn");
+    for(var i=0;i<btns.length;i++){ btns[i].classList.toggle("on", btns[i].dataset.src===s); }
+    $("manualPanel").classList.toggle("hidden", s!=="manual");
+    $("gongPanel").classList.toggle("hidden", s!=="gong");
+  };
+
   window.runResume = async function(){
     if(!thread){ return; }
-    var answers=$("answers").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
-    var body={ thread_id:thread, answers:answers, notes:$("notes").value.trim() };
+    var body={ thread_id:thread, source:feedSource, notes:$("notes").value.trim() };
+    if(feedSource==="gong"){
+      var ids=$("gongIds").value.split(/[\n,]+/).map(function(x){return x.trim();}).filter(Boolean);
+      body.gong={ call_ids:ids, from:$("gongFrom").value.trim()||null, to:$("gongTo").value.trim()||null };
+    }else{
+      body.answers=$("answers").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
+    }
     $("resumeErr").classList.add("hidden"); $("resumeBtn").disabled=true; startTimer($("resumeStatus"));
     try{
       var r=await fetch(api()+"/brain/resume",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
