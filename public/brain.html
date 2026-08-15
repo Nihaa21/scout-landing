@@ -98,7 +98,7 @@
     <div class="row">
       <div><label>Product or industry</label><input id="subject" placeholder="e.g. Notion, or: AI tools for home-cleaning businesses"></div>
       <div><label>Mode</label><select id="mode"><option value="product">product</option><option value="industry">industry</option></select></div>
-      <div><label>Loops (budget)</label><input id="budget" type="number" value="3" min="1" max="6"></div>
+      <div><label>Loops (budget)</label><input id="budget" type="number" value="2" min="1" max="6"></div>
     </div>
     <div class="field"><label>Current build (optional — release notes, a Jira link, or a description)</label>
       <textarea id="build" placeholder="e.g. v3 adds an AI assistant that auto-summarizes support tickets and posts to the channel without confirmation."></textarea></div>
@@ -181,9 +181,18 @@ A beginner loved auto-fix; a senior would disable it."></textarea></div>
 
   function renderStep4(s4){
     $("step4card").classList.remove("hidden");
-    $("resolveNum").innerHTML=pct(s4.confidence)+' <small>resolved</small>';
-    var nh=(s4.needs_human||[]).length;
-    $("gapLabel").textContent=nh+" assumption"+(nh===1?"":"s")+" only a human can close → the interview gap";
+    var total=(s4.assumptions||[]).length;
+    var gap=(s4.gap_count!=null)?s4.gap_count:(s4.needs_human||[]).length;
+    var resolvable=(s4.resolvable_count!=null)?s4.resolvable_count:(total-gap);
+    if(resolvable>0){
+      $("resolveNum").innerHTML=pct(s4.confidence)+' <small>resolved</small>';
+      $("resolveLabel").textContent="research resolved";
+      $("gapLabel").textContent=resolvable+" web-resolvable · "+gap+" only a human can close (interview gap)";
+    }else{
+      $("resolveNum").innerHTML=gap+' <small>to ask</small>';
+      $("resolveLabel").textContent="all interview gap";
+      $("gapLabel").textContent="the web couldn't settle any of these — every assumption needs a real user";
+    }
     var sb=$("sigTable").querySelector("tbody"); sb.innerHTML="";
     (s4.signals_ranked||[]).forEach(function(r){
       sb.insertAdjacentHTML("beforeend","<tr><td>"+esc(r.signal)+"</td><td class='num'>"+r.frequency+"</td><td class='num'>"+r.severity+"</td><td class='num'>"+r.score+"</td><td>"+(r.whitespace?"<span class='chip ws'>whitespace</span>":"")+"</td></tr>");
