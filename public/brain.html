@@ -241,6 +241,7 @@
 <header class="appbar"><div class="wrap bar">
   <span class="word">Scout<b>.</b></span><span class="tag">0→1 discovery agent</span>
   <div class="ctx" id="ctx"><span class="muted">paste anything · get a brief · no setup</span></div>
+  <button class="newbtn hidden" id="briefBtn" onclick="downloadBrief(this)">Export brief ⬇</button>
   <button class="newbtn" id="newRun" onclick="resetRun()">+ New run</button>
 </div></header>
 
@@ -357,6 +358,7 @@
           <div class="lane-label" style="margin-top:0">Feedback in · where finished interviews live</div>
           <div class="conn-grid" id="connGrid">
             <button type="button" class="conn on" data-src="manual" onclick="setSource('manual')"><span class="cname">Manual paste</span><span class="cst live">● live</span><span class="cdesc">type what you heard</span></button>
+            <button type="button" class="conn" data-src="transcripts" onclick="setSource('transcripts')"><span class="cname">Paste transcripts</span><span class="cst live">● live</span><span class="cdesc">raw text from any tool</span></button>
             <button type="button" class="conn" data-src="gong" onclick="setSource('gong')"><span class="cname">Gong</span><span class="cst built">● built — add key</span><span class="cdesc">sales &amp; discovery calls</span></button>
             <button type="button" class="conn" data-src="mcp" onclick="setSource('mcp')"><span class="cname">Custom MCP server</span><span class="cst live">● live</span><span class="cdesc">paste any MCP server URL</span></button>
             <button type="button" class="conn dis" disabled><span class="cname">Fireflies</span><span class="cst plan">○ via MCP</span><span class="cdesc">meeting transcripts</span></button>
@@ -365,11 +367,22 @@
           </div>
           <div class="lane-label">Recruiting out · get the interviews to happen</div>
           <div class="conn-grid">
+            <button type="button" class="conn" id="recruitCard" onclick="toggleRecruit()"><span class="cname">From receipts</span><span class="cst live">● live</span><span class="cdesc">draft outreach to the voices behind the quotes</span></button>
             <button type="button" class="conn dis" disabled><span class="cname">Clay</span><span class="cst plan">○ planned</span><span class="cdesc">enrich &amp; reach the receipt authors</span></button>
             <button type="button" class="conn dis" disabled><span class="cname">Apollo</span><span class="cst plan">○ planned</span><span class="cdesc">find lookalike interviewees</span></button>
             <button type="button" class="conn dis" disabled><span class="cname">Calendly</span><span class="cst plan">○ planned</span><span class="cdesc">scheduling link on the pause</span></button>
           </div>
+          <div id="recruitPanel" class="hidden" style="margin-top:14px;border:.5px solid var(--accent);border-radius:10px;padding:14px 16px;background:var(--accent-soft)">
+            <p class="sechead" style="color:var(--accent)">Recruit from receipts — opt-in outreach drafts</p>
+            <div class="row2" style="margin-top:0"><button type="button" class="btn" style="padding:8px 14px;font-size:13px" onclick="draftOutreach()">Draft outreach</button><span id="recruitStatus" class="muted"></span></div>
+            <div id="recruitList" style="margin-top:10px"></div>
+          </div>
           <div style="margin-top:14px"></div>
+          <div id="transcriptsPanel" class="hidden">
+            <label>Transcripts (separate multiple interviews with a line containing only ---)</label>
+            <textarea id="tsBox" style="min-height:140px" placeholder="Interviewer: When did the workflow break?&#10;Ana: The day QA needed an approval stage…&#10;---&#10;Interviewer: What about pricing?&#10;Ben: Finance killed the annual lock…"></textarea>
+            <p class="muted" style="margin:6px 0 0">Scout distills them against the questions above — recurrence-weighted, with quotes. Works with exports from any tool.</p>
+          </div>
           <div id="manualPanel">
             <label>Answers (one per line)</label>
             <textarea id="answers" style="min-height:96px" placeholder="3 of 4 said they'd instantly undo an unattended change.&#10;Everyone read the error first, then searched."></textarea>
@@ -541,6 +554,80 @@
     }catch(e){ $("askStatus").textContent="ask failed: "+e.message; }
   };
 
+  function buildBrief(){
+    var s4=S.step4||{}, f=S.final||{}, c=f.competitive||{}, L=[];
+    var date=new Date().toISOString().slice(0,10);
+    L.push("# Scout brief — "+(S.subject||"")+"  ·  "+date);
+    L.push("");
+    var res=(s4.resolvable_count>0)?(Math.round((s4.confidence||0)*100)+"% of researchable assumptions resolved"):"all assumptions need human interviews";
+    L.push("*0→1 discovery run · "+res+" · "+((s4.since_last_run||{}).runs_on_record||0)+" prior runs on record*");
+
+    var alerts=(f.alerts&&f.alerts.length?f.alerts:(s4.alerts||[]));
+    if(alerts.length){ L.push("","## ⚡ What changed");
+      alerts.forEach(function(a){ L.push("- **["+a.kind+"]** "+a.title+(a.detail?" — "+a.detail:"")+(a.action?"  \n  → *"+a.action+"*":"")); }); }
+
+    var sigs=s4.signals_ranked||[];
+    if(sigs.length){ L.push("","## 📡 Top signals (frequency × severity)");
+      sigs.slice(0,6).forEach(function(s){
+        L.push("- **"+s.signal+"** — "+s.score+(s.trend?" ("+s.trend+")":"")+((s.who||[]).length?" · hits: "+s.who.join(", "):""));
+        if(s.quote) L.push("  > “"+s.quote+"”"+(s.source_url?" — ["+(s.source_name||"source")+"]("+s.source_url+")":"")); }); }
+
+    var pains=s4.pain_map||[];
+    if(pains.length){ L.push("","## 🩹 Pain map");
+      pains.forEach(function(p){ L.push("- **"+p.pain+"** (severity "+p.severity+"/5"+((p.who||[]).length?" · "+p.who.join(", "):"")+") — "+(p.detail||"")); }); }
+
+    var asms=s4.assumptions||[];
+    if(asms.length){ L.push("","## 🎯 Assumption ledger");
+      L.push("| id | assumption | status | support | resolved |","|---|---|---|---|---|");
+      asms.forEach(function(a){ L.push("| "+a.id+" | "+String(a.statement||"").replace(/\|/g,"/")+" | "+a.status+" | "+Math.round((a.confidence||0)*100)+"% | "+Math.round((a.resolution||0)*100)+"% |"); }); }
+
+    var qs=s4.questions||[];
+    if(qs.length){ L.push("","## 🎙 Interview agenda");
+      qs.forEach(function(q,i){ L.push((i+1)+". "+q.question+(q.closes?"  *(closes "+q.closes+")*":""));
+        if(q.grounded_in) L.push("   - receipt: "+q.grounded_in+(q.source_url?" — ["+(q.source_name||"source")+"]("+q.source_url+")":"")); }); }
+
+    var bt=c.battle_table||[];
+    if(bt.length){ L.push("","## ⚔ Competition");
+      bt.forEach(function(b){ L.push("- **"+b.name+"** ("+(b.segment||"")+") — strength: "+(b.strength||"")+" · weakness: "+(b.weakness||"")+"  \n  → *how to win: "+(b.how_to_win||"")+"*"); }); }
+    var ws=c.whitespace||[];
+    if(ws.length){ L.push("","### Whitespace");
+      ws.forEach(function(w){ var lbl=(typeof w==="string")?w:w.opportunity; var why=(typeof w==="object"&&w)?(w.why_now||""):"";
+        L.push("- **"+lbl+"**"+(why?" — "+why:"")); }); }
+    var st=c.strategy||{};
+    if(st.beachhead||st.wedge){ L.push("","### 0→1 strategy");
+      if(st.beachhead)L.push("- **Beachhead:** "+st.beachhead);
+      if(st.wedge)L.push("- **Wedge:** "+st.wedge);
+      if(st.moat)L.push("- **Moat:** "+st.moat);
+      (st.first_90_days||[]).forEach(function(x,i){ L.push("  "+(i+1)+". "+x); }); }
+
+    var feats=f.proposed_features||[];
+    if(feats.length){ L.push("","## 🗺 Roadmap candidates");
+      var dec={};
+      document.querySelectorAll(".feat").forEach(function(card){
+        var on=card.querySelector(".db.on"); if(on) dec[card.dataset.title]=on.dataset.k; });
+      feats.forEach(function(fe,i){
+        var d=dec[fe.title]?"  **["+dec[fe.title].toUpperCase()+"]**":"";
+        L.push((i+1)+". **"+fe.title+"** — "+Math.round((fe.confidence||0)*100)+"%"+d+"  \n   "+(fe.rationale||"")); }); }
+
+    var bo=f.blue_ocean||[];
+    if(bo.length){ L.push("","## 🌊 Blue ocean");
+      bo.forEach(function(b){ L.push("- **"+b.opportunity+"** — "+(b.why||"")); }); }
+
+    L.push("","---","*Generated by Scout — every number above carries receipts back to real voices.*");
+    return L.join("\n");
+  }
+  window.downloadBrief=function(btn){
+    try{
+      var md=buildBrief();
+      var blob=new Blob([md],{type:"text/markdown"});
+      var a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="scout-brief-"+(S.subject||"run").toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,40)+"-"+new Date().toISOString().slice(0,10)+".md";
+      document.body.appendChild(a); a.click(); a.remove();
+      var t=btn.textContent; btn.textContent="exported ✓"; setTimeout(function(){ btn.textContent=t; },1600);
+    }catch(_e){ btn.textContent="export failed"; }
+  };
+
   window.copyDigest=function(btn){
     try{
       navigator.clipboard.writeText(buildDigest()).then(function(){
@@ -559,6 +646,7 @@
   function navState(tab,st){ var n=document.querySelector('.nav[data-tab="'+tab+'"]'); if(n) n.dataset.st=st; }
   function setPhase(p){
     S.phase=p;
+    $("briefBtn").classList.toggle("hidden", p!=="paused" && p!=="done");
     if(p==="idle"){ ["radar","competition","interviews","roadmap"].forEach(function(t){ navState(t,"locked"); }); }
     if(p==="paused"){ navState("radar","ready"); navState("interviews","attention"); navState("competition","locked"); navState("roadmap","locked"); }
     if(p==="done"){ navState("radar","ready"); navState("interviews","ready"); navState("competition","ready"); navState("roadmap","attention"); }
@@ -697,6 +785,33 @@
     $("manualPanel").classList.toggle("hidden",s!=="manual");
     $("gongPanel").classList.toggle("hidden",s!=="gong");
     $("mcpPanel").classList.toggle("hidden",s!=="mcp");
+    $("transcriptsPanel").classList.toggle("hidden",s!=="transcripts");
+  };
+
+  window.toggleRecruit=function(){
+    $("recruitPanel").classList.toggle("hidden");
+    $("recruitCard").classList.toggle("on", !$("recruitPanel").classList.contains("hidden"));
+  };
+  window.draftOutreach=async function(){
+    if(!S.thread) return;
+    $("recruitStatus").innerHTML='<span class="spinner"></span> reading the receipts…';
+    try{
+      var r=await fetch(api()+"/brain/recruit",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({thread_id:S.thread, resume_token:S.token||""})});
+      var data=await r.json();
+      if(!r.ok) throw new Error(data.detail||("HTTP "+r.status));
+      var list=data.outreach||[];
+      $("recruitStatus").textContent=list.length?list.length+" drafts — edit, then post where indicated":(data.note||"no reachable voices in this run");
+      $("recruitList").innerHTML=list.map(function(o,i){
+        return '<div style="border:.5px solid var(--hair-2);border-radius:9px;padding:11px 13px;margin-bottom:9px;background:var(--surface)">'
+          +'<div style="font-size:11.5px;color:var(--ink-soft)">“'+esc(o.their_words)+'” '
+          +(o.url?'<a class="srclink" href="'+esc(o.url)+'" target="_blank" rel="noopener">'+esc(o.source||"source")+' ↗</a>':"")+'</div>'
+          +'<div class="ev-meta" style="margin:5px 0 3px">'+esc(o.how||"")+(o.closes?' · closes '+esc(o.closes):"")+'</div>'
+          +'<textarea style="min-height:64px;font-size:12.5px" id="rc'+i+'">'+esc(o.message)+'</textarea>'
+          +'<button type="button" class="db" style="margin-top:5px" onclick="navigator.clipboard.writeText(document.getElementById(\'rc'+i+'\').value);this.textContent=\'copied ✓\';">copy message</button>'
+          +'</div>';
+      }).join("");
+    }catch(e){ $("recruitStatus").textContent="draft failed: "+e.message; }
   };
 
   window.mcpDiscover=async function(){
@@ -726,6 +841,10 @@
     if(S.src==="gong"){
       var ids=$("gongIds").value.split(/[\n,]+/).map(function(x){return x.trim();}).filter(Boolean);
       body.gong={ call_ids:ids, from:$("gongFrom").value.trim()||null, to:$("gongTo").value.trim()||null };
+    }else if(S.src==="transcripts"){
+      body.transcripts=$("tsBox").value.split(/\n---+\n/).map(function(b,i){
+        b=b.trim(); return b?{title:"Pasted interview "+(i+1), transcript:b}:null;
+      }).filter(Boolean);
     }else if(S.src==="mcp"){
       var args={};
       try{ args=JSON.parse($("mcpArgs").value.trim()||"{}"); }catch(_e){ args={}; }
