@@ -282,6 +282,7 @@
         <div class="card" id="alertsCard">
           <p class="sechead">Alerts · what changed in your market<button class="digestbtn" id="digestBtn" type="button" onclick="copyDigest(this)">copy digest ⧉</button></p>
           <div id="alertsList"></div>
+          <div id="srcChips" class="muted" style="margin-top:10px;font-size:11px"></div>
         </div>
         <div class="card" id="askCard">
           <p class="sechead">Ask Scout · answers from this run's evidence</p>
@@ -728,6 +729,11 @@
       sb.insertAdjacentHTML("beforeend","<tr class='sigrow' data-i='"+i+"' title='click for the receipt'><td>"+esc(r.signal)+"</td><td class='num'>"+r.frequency+"</td><td>"+sevDots(r.severity)+"</td><td class='num'>"+r.score+"</td><td style='white-space:nowrap'>"+tr+sparkSVG(r.history)+"</td><td>"+(r.whitespace?'<span class="chip ws">whitespace</span>':"")+"</td></tr>");
     });
     renderAlerts(s4.alerts||[]);
+    var ss=s4.source_stats||[], sc=$("srcChips");
+    if(sc){ sc.innerHTML = ss.length ? "Sources: "+ss.map(function(x){
+        var ok=x.fetched>0;
+        return '<span class="chip '+(ok?"pos":"neg")+'"'+(x.hint?' title="'+esc(x.hint)+'"':"")+'>'+esc(x.source)+" "+(ok?"✓"+x.fetched:"⚠0")+'</span>';
+      }).join(" ") : ""; }
     var pl=$("painList"); pl.innerHTML="";
     var pains=s4.pain_map||[];
     if(!pains.length) pl.innerHTML='<p class="muted">no distinct pain map this run</p>';
