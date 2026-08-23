@@ -1,0 +1,113 @@
+/* Scout console — component classes for the /app route.
+   Tokens (--border, --muted, --primary…) come from app/globals.css. */
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.status-chip i,
+.phase-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #85827a;
+}
+.status-green { color: var(--color-pos); border-color: color-mix(in srgb, var(--color-pos) 35%, transparent); }
+.status-green i, .dot-ready { background: var(--color-pos); }
+.status-blue { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+.status-blue i, .dot-attention { background: var(--color-accent); }
+.status-amber { color: var(--color-mid); border-color: color-mix(in srgb, var(--color-mid) 35%, transparent); }
+.status-amber i { background: var(--color-mid); }
+.status-red { color: var(--color-neg); border-color: color-mix(in srgb, var(--color-neg) 35%, transparent); }
+.status-red i { background: var(--color-neg); }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted-foreground);
+}
+
+.phase-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 11px 9px;
+  text-align: left;
+  font-size: 13px;
+}
+.phase-row:hover:not(:disabled) { background: var(--muted); }
+.phase-row .phase-dot { margin-left: auto; }
+.phase-locked { opacity: 0.55; cursor: not-allowed; }
+.dot-attention { animation: scout-pulse 1.8s ease-in-out infinite; }
+
+.ghost-button,
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ghost-button { border: 1px solid var(--border); padding: 9px 12px; }
+.ghost-button:hover { background: var(--muted); }
+.primary-button { background: var(--primary); color: var(--primary-foreground); padding: 10px 15px; }
+.primary-button:hover { opacity: 0.9; }
+.primary-button:disabled, .ghost-button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted-foreground);
+}
+.field-label select,
+.field-label input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--foreground);
+}
+.field-label select:focus,
+.field-label input:focus { outline: none; border-color: var(--primary); }
+
+.severity-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--muted-foreground);
+}
+.severity-dot.filled { background: var(--foreground); border-color: var(--foreground); }
+
+@keyframes scout-pulse {
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-attention { animation: none !important; }
+}
