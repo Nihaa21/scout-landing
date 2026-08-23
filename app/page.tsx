@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { motion } from "motion/react";
 import LiveBrief, { type Phase } from "@/components/LiveBrief";
 import { prettySource, type SourceStatus, type TheaterStage } from "@/components/Theater";
@@ -109,6 +110,15 @@ export default function Home() {
         ranked themes with quotes, maps detailed pain points, builds an interview
         agenda, and produces a full competitive breakdown.
       </p>
+
+      <div className="no-print absolute top-4 right-5 sm:right-8 z-10">
+        <Link
+          href="/app"
+          className="hairline rounded-full px-3.5 py-1.5 font-mono text-[11.5px] text-ink-soft hover:text-ink hover:border-accent/50 transition-colors duration-200"
+        >
+          Open the console →
+        </Link>
+      </div>
 
       <main className="flex-1 px-5 sm:px-8">
         {/* centered identity + input */}
