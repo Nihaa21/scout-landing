@@ -8,6 +8,7 @@ import { prettySource, type SourceStatus, type TheaterStage } from "@/components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { researchStream, IS_LIVE, type Brief } from "@/lib/brief";
+import { track } from "@/lib/track";
 
 const SUGGESTIONS: { label: string; mode: "product" | "industry" }[] = [
   { label: "Jobber", mode: "product" },
@@ -31,12 +32,12 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    track("page_view", { page: "landing", referrer: typeof document !== "undefined" ? document.referrer : "" });
+    return () => {
       if (ticker.current) clearInterval(ticker.current);
-    },
-    [],
-  );
+    };
+  }, []);
 
   async function runScout(e: React.FormEvent) {
     e.preventDefault();
@@ -44,6 +45,7 @@ export default function Home() {
     if (!q) return;
     if (ticker.current) clearInterval(ticker.current);
 
+    track("run_started", { query: q, mode });
     setSubject(q);
     setPhase("scouting");
     setError(null);
@@ -114,6 +116,7 @@ export default function Home() {
       <div className="no-print absolute top-4 right-5 sm:right-8 z-10">
         <Link
           href="/app"
+          onClick={() => track("console_click", {})}
           className="hairline rounded-full px-3.5 py-1.5 font-mono text-[11.5px] text-ink-soft hover:text-ink hover:border-accent/50 transition-colors duration-200"
         >
           Open the console →
