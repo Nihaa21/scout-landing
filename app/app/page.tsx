@@ -67,7 +67,10 @@ export default function Page() {
   }, [phase])
 
   const started = phase !== 'idle' && !!run
-  const navState = (i: number): NavState => phase === 'done' ? 'ready' : phase === 'paused' ? (i === 0 ? 'ready' : i === 2 ? 'attention' : 'locked') : 'locked'
+  // Once the research pass is in (paused or done) every tab is reachable:
+  // Competition + a research-only Roadmap can be generated without interviews.
+  // Interviews just gets the 'attention' dot while a run is paused.
+  const navState = (i: number): NavState => phase === 'idle' || phase === 'running' ? 'locked' : (phase === 'paused' && i === 2 ? 'attention' : 'ready')
   const runScout = async () => {
     if (!brief.trim()) return
     track('console_run', { brief: brief.slice(0, 200), mode, mock: MOCK })
@@ -85,6 +88,22 @@ export default function Page() {
   }
   const finish = (final: FinalResponse) => { if (!run) return; track('console_resume', { subject: run.step4.subject }); const next = { ...run, final }; setRun(next); persist(next, 'done'); setPhase('done'); setSelectedNav(3) }
   const newRun = () => { setBrief(''); setPhase('idle'); setRun(null); persist(null, 'idle'); setElapsed(0); setSelectedNav(0); setError('') }
+
+  // Generate Competition + Roadmap straight from the research, no interviews:
+  // a resume with empty feedback. The competitive teardown is research-derived,
+  // so it comes out complete; the roadmap is drafted from unresolved assumptions.
+  const [generating, setGenerating] = useState(false)
+  const generateFromResearch = async () => {
+    if (!run || generating) return
+    setGenerating(true); setError('')
+    track('console_resume', { subject: run.step4.subject, from_research: true })
+    try {
+      const res = MOCK
+        ? await new Promise<typeof mockResumeResponse>((r) => setTimeout(() => r(mockResumeResponse), 2000))
+        : await resumeRun({ thread_id: run.threadId, resume_token: run.resumeToken, source: 'manual', answers: [], notes: '' })
+      const next = { ...run, final: res.final }; setRun(next); persist(next, 'done'); setPhase('done')
+    } catch (e) { setError(errText(e, 'Could not generate — the run may have expired; try a new run.')) } finally { setGenerating(false) }
+  }
 
   const exportBrief = () => {
     if (!run) return
@@ -111,7 +130,7 @@ export default function Page() {
     </header>
     <div className="mx-auto flex max-w-[1320px]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[198px] shrink-0 border-r border-border px-5 py-8 md:block"><nav aria-label="Discovery phases" className="space-y-1">{navItems.map((label, i) => { const state = navState(i); const unlocked = state !== 'locked'; return <button key={label} disabled={!unlocked} type="button" aria-current={selectedNav === i ? 'page' : undefined} onClick={() => unlocked && setSelectedNav(i)} className={`phase-row ${!unlocked ? 'phase-locked' : ''} ${selectedNav === i && unlocked ? 'bg-muted' : ''}`}><span className="font-mono text-[11px] text-muted-foreground">{i + 1}</span><span>{label}</span><span className={`phase-dot dot-${state}`} /></button>})}</nav></aside>
-      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? <Competition final={run.final}/> : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : <Roadmap run={run}/>}</section>
+      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? (run.final ? <Competition final={run.final}/> : <GenerateGate what="Competition" blurb="the positioning map, five forces, battle cards, and whitespace — all drawn from the market research Scout already did." generating={generating} onGenerate={generateFromResearch} error={error}/>) : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : (run.final ? <Roadmap run={run}/> : <GenerateGate what="Roadmap" blurb="a ranked, evidence-backed feature shortlist. Interviews sharpen it with validated evidence, but Scout can draft it from research alone." generating={generating} onGenerate={generateFromResearch} error={error}/>)}</section>
     </div>
   </main>
 }
@@ -130,6 +149,7 @@ function IdleView({brief,setBrief,mode,setMode,loops,setLoops,runScout,error,wat
   </div>}</div> }
 function Running({elapsed}:{elapsed:number}) { return <div className="mx-auto max-w-[650px] pt-12"><p className="eyebrow">Scout / Researching</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">Finding the signal<span className="text-primary">.</span></h1><p className="mt-4 text-base leading-6 text-muted-foreground">Researching the market · {elapsed}s elapsed — live runs take a few minutes.</p></div> }
 function EmptyState({item}:{item:string}) { return <div className="mx-auto max-w-[760px] pt-8"><p className="eyebrow">{item} / Empty</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em]">{item} is next.</h1><p className="mt-4 text-muted-foreground">This view fills in once interviews come back and Scout proposes the roadmap.</p><div className="mt-8 rounded-xl border border-border bg-card p-6"><div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">No {item.toLowerCase()} evidence yet.</div></div></div> }
+function GenerateGate({what, blurb, generating, onGenerate, error}:{what:string; blurb:string; generating:boolean; onGenerate:()=>void; error:string}) { return <div className="mx-auto max-w-[760px] pt-8"><p className="eyebrow">Scout / {what}</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">{what}</h1><p className="mt-4 max-w-2xl text-base leading-6 text-muted-foreground">{blurb}</p><div className="mt-8 rounded-xl border border-border bg-card p-6"><p className="text-sm leading-6">No interviews needed — Scout drafts this from the research it already ran. You can still open <span className="font-medium text-foreground">Interviews</span> first to sharpen the roadmap with validated evidence; the competitive picture is the same either way.</p><button type="button" disabled={generating} className="primary-button mt-5" onClick={onGenerate}>{generating ? <><LoaderCircle size={14} className="animate-spin"/> analyzing the market…</> : <><Play size={14} fill="currentColor"/> Generate from research</>}</button>{generating && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">scraping competitors + synthesizing — a minute or two on a live run</p>}{error && <p className="mt-3 text-sm text-[color:var(--color-neg)]">{error}</p>}</div></div> }
 
 function Interviews({run, onDone}:{run:Run; onDone:(f:FinalResponse)=>void}) {
   const step = run.step4
