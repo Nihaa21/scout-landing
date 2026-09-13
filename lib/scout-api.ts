@@ -46,6 +46,12 @@ export const saveDecision = (body: { subject: string; mode: Mode; snapshot_key: 
 export const getDecisions = (query: { subject: string; mode: Mode; snapshot_key: number | null }) => request<DecisionResponse>(`/brain/decision?subject=${encodeURIComponent(query.subject)}&mode=${encodeURIComponent(query.mode)}${query.snapshot_key != null ? `&snapshot_key=${query.snapshot_key}` : ''}`)
 export const discoverMcpTools = (body: { url: string; token: string }) => request<McpToolsResponse>('/brain/mcp/tools', { method: 'POST', body: JSON.stringify(body) })
 
+export type WatchEntry = { subject: string; mode: Mode; watched_at: string; last_run_at: string | null; runs_on_record: number; stale: boolean; refreshing: boolean; movement: { rising: number; new: number; fading: number } }
+export type WatchStatus = { watched: WatchEntry[]; stale_count: number }
+export const getWatchlist = () => request<WatchStatus>('/brain/watch')
+export const setWatch = (body: { subject: string; mode: Mode; watch: boolean }) => request<{ ok: boolean }>('/brain/watch', { method: 'POST', body: JSON.stringify(body) })
+export const refreshWatch = (body: { subject: string; mode: Mode; force?: boolean }) => request<{ results: { subject: string; refreshed: boolean; reason?: string }[] }>('/brain/watch/refresh', { method: 'POST', body: JSON.stringify(body) })
+
 const ev = (text: string, source: string, url: string, upvotes: number): Evidence => ({ text, source, url, upvotes })
 const evidence = [
   ev('I have three docs open and none of them agree on what to do next.', 'Reddit / r/ProductManagement', 'https://www.reddit.com/r/ProductManagement/comments/1a2b3c/research-synthesis/', 126),

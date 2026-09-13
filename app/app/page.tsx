@@ -2,8 +2,8 @@
 
 import './console.css'
 import { Fragment, useEffect, useState } from 'react'
-import { ChevronDown, Clipboard, Download, ExternalLink, LoaderCircle, Play, Plus, Search } from 'lucide-react'
-import { MOCK, askScout, discoverMcpTools, getDecisions, mockResumeResponse, mockStartResponse, recruitOutreach, resumeRun, saveDecision, startRun, type Alert, type Decision, type Evidence, type FinalResponse, type Pain, type Signal, type StartResponse, type Step4 } from '@/lib/scout-api'
+import { ChevronDown, Clipboard, Download, ExternalLink, Eye, LoaderCircle, Play, Plus, Search } from 'lucide-react'
+import { MOCK, askScout, discoverMcpTools, getDecisions, mockResumeResponse, mockStartResponse, recruitOutreach, resumeRun, saveDecision, startRun, getWatchlist, setWatch, refreshWatch, type WatchEntry, type Alert, type Decision, type Evidence, type FinalResponse, type Pain, type Signal, type StartResponse, type Step4 } from '@/lib/scout-api'
 import { track } from '@/lib/track'
 
 type Phase = 'idle' | 'running' | 'paused' | 'done'
@@ -14,6 +14,7 @@ const STORE = 'scout-console-run'
 // Live API sends `closes` as a single id string and `who` as an array; mock predates that.
 const asList = (v: unknown): string[] => Array.isArray(v) ? v.filter(Boolean).map(String) : (typeof v === 'string' && v ? [v] : [])
 const asText = (v: unknown): string => Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v))
+const ago = (iso: string | null): string => { if (!iso) return 'never listened'; const h = (Date.now() - new Date(iso).getTime()) / 36e5; if (h < 1.5) return 'just now'; if (h < 36) return `${Math.round(h)}h ago`; return `${Math.round(h / 24)}d ago` }
 const errText = (e: unknown, fallback: string): string => { const d = (e as { detail?: unknown })?.detail; if (typeof d === 'string') return d; if (Array.isArray(d)) return d.map((x) => (x as {msg?:string})?.msg ?? JSON.stringify(x)).join(' · '); return fallback }
 
 export default function Page() {
@@ -25,6 +26,29 @@ export default function Page() {
   const [error, setError] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [selectedNav, setSelectedNav] = useState(0)
+  const [watchlist, setWatchlist] = useState<WatchEntry[]>([])
+  const [refreshing, setRefreshing] = useState<Record<string, boolean>>({})
+
+  const loadWatchlist = async (): Promise<WatchEntry[]> => {
+    if (MOCK) return []
+    try { const w = await getWatchlist(); setWatchlist(w.watched ?? []); return w.watched ?? [] } catch { return [] }
+  }
+
+  // Mechanism A — stale-while-revalidate on visit: any watched subject whose
+  // last listening pass is older than a week gets one kicked off in the
+  // background the moment someone opens the console.
+  useEffect(() => {
+    if (MOCK) return
+    ;(async () => {
+      const watched = await loadWatchlist()
+      watched.filter(w => w.stale && !w.refreshing).forEach(w => {
+        setRefreshing(x => ({ ...x, [w.subject]: true }))
+        refreshWatch({ subject: w.subject, mode: w.mode })
+          .catch(() => {})
+          .finally(() => { setRefreshing(x => ({ ...x, [w.subject]: false })); loadWatchlist() })
+      })
+    })()
+  }, [])
 
   useEffect(() => {
     track('page_view', { page: 'console', referrer: typeof document !== 'undefined' ? document.referrer : '' })
@@ -76,21 +100,34 @@ export default function Page() {
   const step4 = run?.step4
   const resolvedPct = step4 ? Math.round(step4.confidence * 100) : 0
   const gaps = step4 ? (step4.needs_human?.length || step4.gap_count || 0) : 0
+  const watchedNow = step4 ? watchlist.some(w => w.subject.toLowerCase() === step4.subject.toLowerCase() && w.mode === step4.mode) : false
+  const toggleWatch = async () => { if (!step4 || MOCK) return; try { await setWatch({ subject: step4.subject, mode: step4.mode, watch: !watchedNow }); await loadWatchlist() } catch {} }
 
   return <main className="min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-20 flex min-h-16 w-full items-center justify-between gap-5 border-b border-border bg-background px-5 py-3 md:px-8">
       <div className="flex shrink-0 items-baseline gap-3"><span className="text-xl font-semibold tracking-[-0.04em]">Scout<span className="text-primary">.</span></span><span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">0→1 Discovery Agent</span></div>
       {started && step4 && <div className="hidden min-w-0 items-center gap-2 md:flex" aria-label="Run status"><span className="status-chip max-w-[190px] truncate" title={step4.subject}>{step4.subject.slice(0, 26)}… <ChevronDown size={11}/></span>{phase === 'running' ? <span className="status-chip status-blue"><i/>researching · {elapsed}s</span> : <><span className="status-chip status-green"><i/>{resolvedPct}% resolved</span><span className="status-chip status-blue"><i/>{gaps} to ask</span>{phase === 'paused' && <span className="status-chip status-amber">paused — waiting on interviews</span>}</>}</div>}
-      <div className="flex items-center gap-2"><button type="button" className="ghost-button" onClick={newRun}><Plus size={15}/> New run</button>{started && <button type="button" className="ghost-button" onClick={exportBrief}><Download size={14}/> Export brief</button>}</div>
+      <div className="flex items-center gap-2"><button type="button" className="ghost-button" onClick={newRun}><Plus size={15}/> New run</button>{started && <button type="button" className="ghost-button" onClick={exportBrief}><Download size={14}/> Export brief</button>}{started && !MOCK && phase !== 'running' && <button type="button" title={watchedNow ? 'Scout listens to this market automatically — click to stop' : 'Auto-refresh this market weekly (and when stale on visit)'} className={`ghost-button ${watchedNow ? 'status-green' : ''}`} onClick={toggleWatch}><Eye size={14}/> {watchedNow ? 'Watching' : 'Watch'}</button>}</div>
     </header>
     <div className="mx-auto flex max-w-[1320px]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[198px] shrink-0 border-r border-border px-5 py-8 md:block"><nav aria-label="Discovery phases" className="space-y-1">{navItems.map((label, i) => { const state = navState(i); const unlocked = state !== 'locked'; return <button key={label} disabled={!unlocked} type="button" aria-current={selectedNav === i ? 'page' : undefined} onClick={() => unlocked && setSelectedNav(i)} className={`phase-row ${!unlocked ? 'phase-locked' : ''} ${selectedNav === i && unlocked ? 'bg-muted' : ''}`}><span className="font-mono text-[11px] text-muted-foreground">{i + 1}</span><span>{label}</span><span className={`phase-dot dot-${state}`} /></button>})}</nav></aside>
-      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error}}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? <Competition final={run.final}/> : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : <Roadmap run={run}/>}</section>
+      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? <Competition final={run.final}/> : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : <Roadmap run={run}/>}</section>
     </div>
   </main>
 }
 
-function IdleView({brief,setBrief,mode,setMode,loops,setLoops,runScout,error}:{brief:string;setBrief:(v:string)=>void;mode:string;setMode:(v:'product'|'industry')=>void;loops:string;setLoops:(v:string)=>void;runScout:()=>void;error:string}) { return <div className="mx-auto max-w-[650px] pt-8 md:pt-12"><div className="mb-8"><h1 className="text-balance text-4xl font-semibold tracking-[-0.055em] md:text-5xl">What are you building?</h1><p className="mt-4 text-base leading-6 text-muted-foreground">Find the signal before you build the product.</p></div><div className="rounded-xl border border-border bg-card p-5 md:p-6"><label htmlFor="brief" className="sr-only">Product idea or research prompt</label><textarea id="brief" value={brief} onChange={e=>setBrief(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();runScout()}}} placeholder="Paste a product idea, customer note, market question, or anything you want to explore…" className="min-h-48 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-6 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"/><div className="mt-5 grid gap-4 sm:grid-cols-[1fr_140px]"><label className="field-label">Mode<select value={mode} onChange={e=>setMode(e.target.value as 'product'|'industry')}><option value="product">Product</option><option value="industry">Industry</option></select></label><label className="field-label">Loops<input type="number" min="1" max="6" value={loops} onChange={e=>setLoops(e.target.value)}/></label></div><button type="button" className="primary-button mt-5" onClick={runScout}><Play size={14} fill="currentColor"/> Run Scout</button>{error && <p className="mt-4 text-sm text-[color:var(--color-neg)]">{error}</p>}{MOCK && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">preview mode — sample data, no live research</p>}</div></div> }
+function IdleView({brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}:{brief:string;setBrief:(v:string)=>void;mode:string;setMode:(v:'product'|'industry')=>void;loops:string;setLoops:(v:string)=>void;runScout:()=>void;error:string;watchlist:WatchEntry[];refreshing:Record<string,boolean>}) { return <div className="mx-auto max-w-[650px] pt-8 md:pt-12"><div className="mb-8"><h1 className="text-balance text-4xl font-semibold tracking-[-0.055em] md:text-5xl">What are you building?</h1><p className="mt-4 text-base leading-6 text-muted-foreground">Find the signal before you build the product.</p></div><div className="rounded-xl border border-border bg-card p-5 md:p-6"><label htmlFor="brief" className="sr-only">Product idea or research prompt</label><textarea id="brief" value={brief} onChange={e=>setBrief(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();runScout()}}} placeholder="Paste a product idea, customer note, market question, or anything you want to explore…" className="min-h-48 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-6 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"/><div className="mt-5 grid gap-4 sm:grid-cols-[1fr_140px]"><label className="field-label">Mode<select value={mode} onChange={e=>setMode(e.target.value as 'product'|'industry')}><option value="product">Product</option><option value="industry">Industry</option></select></label><label className="field-label">Loops<input type="number" min="1" max="6" value={loops} onChange={e=>setLoops(e.target.value)}/></label></div><button type="button" className="primary-button mt-5" onClick={runScout}><Play size={14} fill="currentColor"/> Run Scout</button>{error && <p className="mt-4 text-sm text-[color:var(--color-neg)]">{error}</p>}{MOCK && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">preview mode — sample data, no live research</p>}</div>
+  {!MOCK && watchlist.length > 0 && <div className="mt-6 rounded-xl border border-border bg-card p-5 md:p-6">
+    <div className="mb-4 flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-sm font-semibold"><Eye size={14} className="text-primary"/> Watchtower</h2><span className="eyebrow">refreshes weekly · and on visit when stale</span></div>
+    <div className="space-y-3">{watchlist.map(w => { const busy = refreshing[w.subject] || w.refreshing; return <div key={w.subject + w.mode} className="flex flex-wrap items-center gap-2 border-b border-border pb-3 last:border-0 last:pb-0">
+      <span className="text-sm font-medium">{w.subject}</span>
+      {w.movement.rising > 0 && <span className="status-chip status-green">▲ {w.movement.rising} rising</span>}
+      {w.movement.new > 0 && <span className="status-chip status-blue">✦ {w.movement.new} new</span>}
+      {w.movement.fading > 0 && <span className="status-chip status-amber">▼ {w.movement.fading} fading</span>}
+      {busy && <span className="status-chip status-blue"><LoaderCircle size={10} className="animate-spin"/> listening to the market…</span>}
+      <span className="ml-auto font-mono text-[10px] text-muted-foreground">{w.runs_on_record} runs · {ago(w.last_run_at)}</span>
+    </div>})}</div>
+  </div>}</div> }
 function Running({elapsed}:{elapsed:number}) { return <div className="mx-auto max-w-[650px] pt-12"><p className="eyebrow">Scout / Researching</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">Finding the signal<span className="text-primary">.</span></h1><p className="mt-4 text-base leading-6 text-muted-foreground">Researching the market · {elapsed}s elapsed — live runs take a few minutes.</p></div> }
 function EmptyState({item}:{item:string}) { return <div className="mx-auto max-w-[760px] pt-8"><p className="eyebrow">{item} / Empty</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em]">{item} is next.</h1><p className="mt-4 text-muted-foreground">This view fills in once interviews come back and Scout proposes the roadmap.</p><div className="mt-8 rounded-xl border border-border bg-card p-6"><div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">No {item.toLowerCase()} evidence yet.</div></div></div> }
 
