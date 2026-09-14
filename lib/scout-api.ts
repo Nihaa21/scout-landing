@@ -12,10 +12,13 @@ export type Signal = { signal: string; frequency: number; severity: 1|2|3|4|5; s
 export type SourceStat = { source: string; fetched: number; added: number; hint?: string }
 export type Alert = { kind: AlertKind; severity: 1|2|3|4|5; title: string; detail: string; action: string }
 export type Pain = { pain: string; detail: string; severity: 1|2|3|4|5; quote: string; who: string; source_url: string; evidence: Evidence[]; evidence_count: number }
-export type Question = { question: string; why: string; grounded_in: string[]; closes: string[]; source_url: string; source_name: string }
+export type MomFlag = { type: string; why: string; fix: string }
+export type MomTest = { score: number; verdict: 'clean' | 'soft' | 'leading'; behavioral: boolean; flags: MomFlag[] }
+export type Question = { question: string; why: string; grounded_in: string[]; closes: string[]; source_url: string; source_name: string; mom_test?: MomTest }
+export type AgendaQuality = { avg: number; clean: number; flagged: number; total: number }
 export type Assumption = { id: string; statement: string; confidence: number; resolution: string; status: AssumptionStatus; evidence: Evidence[] }
 export type SinceLastRun = { previous_run_at: string | null; runs_on_record: number; new: string[]; rising: string[]; fading: string[]; gone: string[] }
-export type Step4 = { subject: string; mode: Mode; confidence: number; resolvable_count: number; gap_count: number; snapshot_key: number | null; signals_ranked: Signal[]; since_last_run: SinceLastRun; source_stats: SourceStat[]; alerts: Alert[]; pain_map: Pain[]; questions: Question[]; assumptions: Assumption[]; needs_human: Assumption[] }
+export type Step4 = { subject: string; mode: Mode; confidence: number; resolvable_count: number; gap_count: number; snapshot_key: number | null; signals_ranked: Signal[]; since_last_run: SinceLastRun; source_stats: SourceStat[]; alerts: Alert[]; pain_map: Pain[]; questions: Question[]; agenda_quality?: AgendaQuality; assumptions: Assumption[]; needs_human: Assumption[] }
 export type StartResponse = { thread_id: string; status: 'needs_feedback'; subject: string; resume_token: string; log: string[]; step4: Step4 }
 export type ProposedFeature = { title: string; confidence: number; rationale: string; evidence: Evidence[]; assumption_id: string }
 export type Player = { name: string; x: number; y: number; is_subject: boolean; note: string }
@@ -48,6 +51,9 @@ export const discoverMcpTools = (body: { url: string; token: string }) => reques
 
 export type WatchEntry = { subject: string; mode: Mode; watched_at: string; last_run_at: string | null; runs_on_record: number; stale: boolean; refreshing: boolean; movement: { rising: number; new: number; fading: number } }
 export type WatchStatus = { watched: WatchEntry[]; stale_count: number }
+export type JournalEntry = { at: string; key: number; run: number; signal_count: number; headline: string; rising: string[]; new: string[]; fading: string[]; competitor_changes: string[]; new_whitespace: string[] }
+export type Journal = { subject: string; mode: Mode; runs: number; entries: JournalEntry[] }
+export const getJournal = (subject: string, mode: Mode) => request<Journal>(`/brain/journal?subject=${encodeURIComponent(subject)}&mode=${encodeURIComponent(mode)}`)
 export const getWatchlist = () => request<WatchStatus>('/brain/watch')
 export const setWatch = (body: { subject: string; mode: Mode; watch: boolean }) => request<{ ok: boolean }>('/brain/watch', { method: 'POST', body: JSON.stringify(body) })
 export const refreshWatch = (body: { subject: string; mode: Mode; force?: boolean }) => request<{ results: { subject: string; refreshed: boolean; reason?: string }[] }>('/brain/watch/refresh', { method: 'POST', body: JSON.stringify(body) })
