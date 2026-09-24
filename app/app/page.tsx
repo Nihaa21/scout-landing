@@ -29,6 +29,7 @@ export default function Page() {
   const [selectedNav, setSelectedNav] = useState(0)
   const [watchlist, setWatchlist] = useState<WatchEntry[]>([])
   const [refreshing, setRefreshing] = useState<Record<string, boolean>>({})
+  const [history, setHistory] = useState<{ subject: string; mode: 'product' | 'industry' } | null>(null)
 
   const loadWatchlist = async (): Promise<WatchEntry[]> => {
     if (MOCK) return []
@@ -72,14 +73,14 @@ export default function Page() {
   // Competition + a research-only Roadmap can be generated without interviews.
   // Interviews just gets the 'attention' dot while a run is paused.
   const navState = (i: number): NavState => phase === 'idle' || phase === 'running' ? 'locked' : (phase === 'paused' && i === 2 ? 'attention' : 'ready')
-  const runScout = async () => {
-    if (!brief.trim()) return
-    track('console_run', { brief: brief.slice(0, 200), mode, mock: MOCK })
-    setError(''); setElapsed(0); setPhase('running'); setSelectedNav(0)
+  const launch = async (raw: string, m: 'product' | 'industry') => {
+    if (!raw.trim()) return
+    track('console_run', { brief: raw.slice(0, 200), mode: m, mock: MOCK })
+    setError(''); setElapsed(0); setHistory(null); setPhase('running'); setSelectedNav(0)
     try {
       const res: StartResponse = MOCK
         ? await new Promise((r) => setTimeout(() => r(mockStartResponse), 3000))
-        : await startRun({ raw: brief, mode, budget: Math.max(1, Math.min(6, Number(loops) || 2)) })
+        : await startRun({ raw, mode: m, budget: Math.max(1, Math.min(6, Number(loops) || 2)) })
       const next: Run = { threadId: res.thread_id, resumeToken: res.resume_token, step4: res.step4, final: null }
       setRun(next); persist(next, 'paused'); setPhase('paused'); setSelectedNav(0)
     } catch (e) {
@@ -87,6 +88,7 @@ export default function Page() {
       setPhase('idle')
     }
   }
+  const runScout = () => launch(brief, mode)
   const finish = (final: FinalResponse) => { if (!run) return; track('console_resume', { subject: run.step4.subject }); const next = { ...run, final }; setRun(next); persist(next, 'done'); setPhase('done'); setSelectedNav(3) }
   const newRun = () => { setBrief(''); setPhase('idle'); setRun(null); persist(null, 'idle'); setElapsed(0); setSelectedNav(0); setError('') }
 
@@ -131,23 +133,48 @@ export default function Page() {
     </header>
     <div className="mx-auto flex max-w-[1320px]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[198px] shrink-0 border-r border-border px-5 py-8 md:block"><nav aria-label="Discovery phases" className="space-y-1">{navItems.map((label, i) => { const state = navState(i); const unlocked = state !== 'locked'; return <button key={label} disabled={!unlocked} type="button" aria-current={selectedNav === i ? 'page' : undefined} onClick={() => unlocked && setSelectedNav(i)} className={`phase-row ${!unlocked ? 'phase-locked' : ''} ${selectedNav === i && unlocked ? 'bg-muted' : ''}`}><span className="font-mono text-[11px] text-muted-foreground">{i + 1}</span><span>{label}</span><span className={`phase-dot dot-${state}`} /></button>})}</nav></aside>
-      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? (run.final ? <Competition final={run.final}/> : <GenerateGate what="Competition" blurb="the positioning map, five forces, battle cards, and whitespace — all drawn from the market research Scout already did." generating={generating} onGenerate={generateFromResearch} error={error}/>) : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : (run.final ? <Roadmap run={run}/> : <GenerateGate what="Roadmap" blurb="a ranked, evidence-backed feature shortlist. Interviews sharpen it with validated evidence, but Scout can draft it from research alone." generating={generating} onGenerate={generateFromResearch} error={error}/>)}</section>
+      <section className="min-w-0 flex-1 px-5 py-12 md:px-12 md:py-16">{phase === 'idle' || !run ? (phase === 'running' ? <Running elapsed={elapsed}/> : history ? <SubjectHistory subject={history.subject} mode={history.mode} onBack={()=>setHistory(null)} onRun={()=>launch(history.subject, history.mode)}/> : <IdleView {...{brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}} onOpenSubject={(s,m)=>setHistory({subject:s,mode:m})}/>) : phase === 'running' ? <Running elapsed={elapsed}/> : selectedNav === 0 ? <Radar run={run} phase={phase}/> : selectedNav === 1 ? (run.final ? <Competition final={run.final}/> : <GenerateGate what="Competition" blurb="the positioning map, five forces, battle cards, and whitespace — all drawn from the market research Scout already did." generating={generating} onGenerate={generateFromResearch} error={error}/>) : selectedNav === 2 ? <Interviews run={run} onDone={finish}/> : (run.final ? <Roadmap run={run}/> : <GenerateGate what="Roadmap" blurb="a ranked, evidence-backed feature shortlist. Interviews sharpen it with validated evidence, but Scout can draft it from research alone." generating={generating} onGenerate={generateFromResearch} error={error}/>)}</section>
     </div>
   </main>
 }
 
-function IdleView({brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing}:{brief:string;setBrief:(v:string)=>void;mode:string;setMode:(v:'product'|'industry')=>void;loops:string;setLoops:(v:string)=>void;runScout:()=>void;error:string;watchlist:WatchEntry[];refreshing:Record<string,boolean>}) { return <div className="mx-auto max-w-[650px] pt-8 md:pt-12"><div className="mb-8"><h1 className="text-balance text-4xl font-semibold tracking-[-0.055em] md:text-5xl">What are you building?</h1><p className="mt-4 text-base leading-6 text-muted-foreground">Find the signal before you build the product.</p></div><div className="rounded-xl border border-border bg-card p-5 md:p-6"><label htmlFor="brief" className="sr-only">Product idea or research prompt</label><textarea id="brief" value={brief} onChange={e=>setBrief(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();runScout()}}} placeholder="Paste a product idea, customer note, market question, or anything you want to explore…" className="min-h-48 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-6 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"/><div className="mt-5 grid gap-4 sm:grid-cols-[1fr_140px]"><label className="field-label">Mode<select value={mode} onChange={e=>setMode(e.target.value as 'product'|'industry')}><option value="product">Product</option><option value="industry">Industry</option></select></label><label className="field-label">Loops<input type="number" min="1" max="6" value={loops} onChange={e=>setLoops(e.target.value)}/></label></div><button type="button" className="primary-button mt-5" onClick={runScout}><Play size={14} fill="currentColor"/> Run Scout</button>{error && <p className="mt-4 text-sm text-[color:var(--color-neg)]">{error}</p>}{MOCK && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">preview mode — sample data, no live research</p>}</div>
-  {!MOCK && watchlist.length > 0 && <div className="mt-6 rounded-xl border border-border bg-card p-5 md:p-6">
-    <div className="mb-4 flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-sm font-semibold"><Eye size={14} className="text-primary"/> Watchtower</h2><span className="eyebrow">refreshes weekly · and on visit when stale</span></div>
-    <div className="space-y-3">{watchlist.map(w => { const busy = refreshing[w.subject] || w.refreshing; return <div key={w.subject + w.mode} className="flex flex-wrap items-center gap-2 border-b border-border pb-3 last:border-0 last:pb-0">
-      <span className="text-sm font-medium">{w.subject}</span>
-      {w.movement.rising > 0 && <span className="status-chip status-green">▲ {w.movement.rising} rising</span>}
-      {w.movement.new > 0 && <span className="status-chip status-blue">✦ {w.movement.new} new</span>}
-      {w.movement.fading > 0 && <span className="status-chip status-amber">▼ {w.movement.fading} fading</span>}
-      {busy && <span className="status-chip status-blue"><LoaderCircle size={10} className="animate-spin"/> listening to the market…</span>}
-      <span className="ml-auto font-mono text-[10px] text-muted-foreground">{w.runs_on_record} runs · {ago(w.last_run_at)}</span>
-    </div>})}</div>
-  </div>}</div> }
+function IdleView({brief,setBrief,mode,setMode,loops,setLoops,runScout,error,watchlist,refreshing,onOpenSubject}:{brief:string;setBrief:(v:string)=>void;mode:string;setMode:(v:'product'|'industry')=>void;loops:string;setLoops:(v:string)=>void;runScout:()=>void;error:string;watchlist:WatchEntry[];refreshing:Record<string,boolean>;onOpenSubject:(s:string,m:'product'|'industry')=>void}) {
+  return <div className="mx-auto max-w-[1120px] pt-4 md:pt-8">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+      {/* LEFT — the ask */}
+      <div>
+        <div className="mb-6"><h1 className="text-balance text-4xl font-semibold tracking-[-0.055em] md:text-5xl">What are you building?</h1><p className="mt-3 text-base leading-6 text-muted-foreground">Find the signal before you build the product.</p></div>
+        <div className="rounded-xl border border-border bg-card p-5 md:p-6">
+          <label htmlFor="brief" className="sr-only">Product idea or research prompt</label>
+          <textarea id="brief" value={brief} onChange={e=>setBrief(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();runScout()}}} placeholder="Paste a product idea, a competitor, or a market question…" className="min-h-28 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-6 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"/>
+          <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_140px]"><label className="field-label">Mode<select value={mode} onChange={e=>setMode(e.target.value as 'product'|'industry')}><option value="product">Product</option><option value="industry">Industry</option></select></label><label className="field-label">Loops<input type="number" min="1" max="6" value={loops} onChange={e=>setLoops(e.target.value)}/></label></div>
+          <button type="button" className="primary-button mt-4" onClick={runScout}><Play size={14} fill="currentColor"/> Run Scout</button>
+          {error && <p className="mt-4 text-sm text-[color:var(--color-neg)]">{error}</p>}{MOCK && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">preview mode — sample data, no live research</p>}
+        </div>
+      </div>
+      {/* RIGHT — the watchtower */}
+      {!MOCK && <aside className="lg:sticky lg:top-20">
+        {watchlist.length > 0 ? <div className="rounded-xl border border-border bg-card p-5">
+          <div className="mb-1 flex items-center gap-2"><span className="relative flex h-2 w-2" aria-hidden="true"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60"/><span className="relative inline-flex h-2 w-2 rounded-full bg-primary"/></span><h2 className="flex items-center gap-1.5 text-sm font-semibold"><Eye size={14} className="text-primary"/> Watchtower</h2><span className="ml-auto font-mono text-[10px] text-muted-foreground">{watchlist.length} watched</span></div>
+          <p className="eyebrow mb-4">auto-refreshes weekly · click to open history</p>
+          <div className="space-y-2">{watchlist.map(w => { const busy = refreshing[w.subject] || w.refreshing; return <button key={w.subject + w.mode} type="button" onClick={()=>onOpenSubject(w.subject, w.mode)} className="group w-full rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-primary">
+            <div className="flex items-center gap-2"><span className="truncate text-sm font-medium">{w.subject}</span><span className="ml-auto shrink-0 font-mono text-[10px] text-primary opacity-0 transition-opacity group-hover:opacity-100">open →</span></div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">{w.movement.rising > 0 && <span className="status-chip status-green">▲ {w.movement.rising}</span>}{w.movement.new > 0 && <span className="status-chip status-blue">✦ {w.movement.new}</span>}{w.movement.fading > 0 && <span className="status-chip status-amber">▼ {w.movement.fading}</span>}{busy && <span className="status-chip status-blue"><LoaderCircle size={10} className="animate-spin"/> listening…</span>}<span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">{w.runs_on_record} runs · {ago(w.last_run_at)}</span></div>
+          </button>})}</div>
+        </div> : <div className="rounded-xl border border-dashed border-border p-5"><h2 className="flex items-center gap-1.5 text-sm font-semibold"><Eye size={14} className="text-muted-foreground"/> Watchtower</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Run a market, then hit <span className="font-medium text-foreground">Watch</span> in the header. Scout tracks it automatically and your history lands here.</p></div>}
+      </aside>}
+    </div>
+  </div>
+}
+function SubjectHistory({subject, mode, onBack, onRun}:{subject:string; mode:'product'|'industry'; onBack:()=>void; onRun:()=>void}) {
+  return <div className="mx-auto max-w-[880px] pt-4 md:pt-8">
+    <button type="button" onClick={onBack} className="ghost-button mb-6">← Back</button>
+    <p className="eyebrow">Scout / Market history</p>
+    <div className="mt-3 flex flex-wrap items-end justify-between gap-4"><h1 className="text-4xl font-semibold tracking-[-0.055em] md:text-5xl">{subject}</h1><button type="button" className="primary-button" onClick={onRun}><Play size={14} fill="currentColor"/> Run a fresh pass</button></div>
+    <p className="mt-4 max-w-2xl text-base leading-6 text-muted-foreground">Everything Scout has learned about this market, run over run. A fresh pass adds the next entry to the timeline.</p>
+    <div className="mt-6"><MarketJournal subject={subject} mode={mode} minEntries={1} defaultOpen/></div>
+  </div>
+}
 function Running({elapsed}:{elapsed:number}) { return <div className="mx-auto max-w-[650px] pt-12"><p className="eyebrow">Scout / Researching</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">Finding the signal<span className="text-primary">.</span></h1><p className="mt-4 text-base leading-6 text-muted-foreground">Researching the market · {elapsed}s elapsed — live runs take a few minutes.</p></div> }
 function EmptyState({item}:{item:string}) { return <div className="mx-auto max-w-[760px] pt-8"><p className="eyebrow">{item} / Empty</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em]">{item} is next.</h1><p className="mt-4 text-muted-foreground">This view fills in once interviews come back and Scout proposes the roadmap.</p><div className="mt-8 rounded-xl border border-border bg-card p-6"><div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">No {item.toLowerCase()} evidence yet.</div></div></div> }
 function GenerateGate({what, blurb, generating, onGenerate, error}:{what:string; blurb:string; generating:boolean; onGenerate:()=>void; error:string}) { return <div className="mx-auto max-w-[760px] pt-8"><p className="eyebrow">Scout / {what}</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">{what}</h1><p className="mt-4 max-w-2xl text-base leading-6 text-muted-foreground">{blurb}</p><div className="mt-8 rounded-xl border border-border bg-card p-6"><p className="text-sm leading-6">No interviews needed — Scout drafts this from the research it already ran. You can still open <span className="font-medium text-foreground">Interviews</span> first to sharpen the roadmap with validated evidence; the competitive picture is the same either way.</p><button type="button" disabled={generating} className="primary-button mt-5" onClick={onGenerate}>{generating ? <><LoaderCircle size={14} className="animate-spin"/> analyzing the market…</> : <><Play size={14} fill="currentColor"/> Generate from research</>}</button>{generating && <p className="mt-3 font-mono text-[10px] uppercase text-muted-foreground">scraping competitors + synthesizing — a minute or two on a live run</p>}{error && <p className="mt-3 text-sm text-[color:var(--color-neg)]">{error}</p>}</div></div> }
@@ -198,14 +225,17 @@ const MOCK_JOURNAL: JournalEntry[] = [
   { at: '2026-08-21', key: 2, run: 2, signal_count: 12, headline: '2 rising · 4 new', rising: ['Scattered research'], new: ['Decision context is a new pain'], fading: [], competitor_changes: [], new_whitespace: [] },
   { at: '2026-08-18', key: 1, run: 1, signal_count: 12, headline: 'baseline captured — 12 signals', rising: [], new: [], fading: [], competitor_changes: [], new_whitespace: [] },
 ]
-function MarketJournal({subject, mode}:{subject:string; mode:'product'|'industry'}) {
+function MarketJournal({subject, mode, minEntries=2, defaultOpen=false}:{subject:string; mode:'product'|'industry'; minEntries?:number; defaultOpen?:boolean}) {
   const [entries, setEntries] = useState<JournalEntry[]|null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   useEffect(() => {
     if (MOCK) { setEntries(MOCK_JOURNAL); return }
     getJournal(subject, mode).then(j => setEntries(j.entries)).catch(() => setEntries([]))
   }, [subject, mode])
-  if (!entries || entries.length < 2) return null // only meaningful once there's history
+  if (!entries) return null // still loading
+  if (entries.length < minEntries) return minEntries <= 1
+    ? <SectionCard className="mt-4"><p className="text-sm text-muted-foreground">No runs recorded for this market yet — run a pass to start the history.</p></SectionCard>
+    : null // in Radar, the journal only earns its space once there's history
   const shown = open ? entries : entries.slice(0, 3)
   return <SectionCard className="mt-4"><SectionTitle action={entries.length > 3 ? <button type="button" className="ghost-button px-2.5 py-1.5 text-[10px]" onClick={() => setOpen(!open)}>{open ? 'show less' : `all ${entries.length} runs`}</button> : undefined}>Market journal · how this market moved</SectionTitle>
     <ol className="relative space-y-4 border-l border-border pl-5">{shown.map(e => <li key={e.key} className="relative"><span className="absolute -left-[23px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary"/><div className="flex flex-wrap items-baseline justify-between gap-2"><p className="text-sm font-medium">{e.headline}</p><span className="font-mono text-[10px] text-muted-foreground">{(e.at||'').slice(0,10)} · run {e.run} · {e.signal_count} signals</span></div><div className="mt-1.5 space-y-1">{e.rising.slice(0,2).map(x => <p key={x} className="truncate text-xs text-[color:var(--color-pos)]" title={x}>▲ rising · {x}</p>)}{e.new.slice(0,1).map(x => <p key={x} className="truncate text-xs text-primary" title={x}>✦ new · {x}</p>)}{e.competitor_changes.slice(0,1).map((x,j) => <p key={j} className="truncate text-xs text-[color:var(--color-neg)]" title={x}>⚔ {x}</p>)}{e.new_whitespace.slice(0,1).map((x,j) => <p key={j} className="truncate text-xs text-muted-foreground" title={x}>◇ whitespace · {x}</p>)}</div></li>)}</ol>
