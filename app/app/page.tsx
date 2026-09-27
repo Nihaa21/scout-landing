@@ -298,9 +298,31 @@ function Roadmap({run}:{run:Run}) { const f=run.final; const [decisions,setDecis
 function Competition({final:f}:{final:FinalResponse|null}) {
   const pos = f?.competitive?.positioning
   const players = f?.competitive?.positioning?.players ?? f?.competitive?.players ?? []
+  const battle = f?.competitive?.battle_table ?? []
+  const teardown = f?.teardown ?? []
+  const norm = (s?: string) => (s || '').toLowerCase().trim()
+  const segFor = (name: string) => battle.find(b => norm(b.name) === norm(name) || (norm(name) && norm(b.name) && (norm(name).includes(norm(b.name)) || norm(b.name).includes(norm(name)))))?.segment
+  const stripName = (chg: string, name: string) => norm(chg).indexOf(norm(name)) === 0 ? chg.slice(name.length).replace(/^[\s:\-–—]+/, '') : chg
+  const changeFor = (name: string) => (f?.competitor_changes ?? []).filter(c => norm(name) && norm(c).includes(norm(name))).map(c => stripName(c, name))
+  const otherChanges = (f?.competitor_changes ?? []).filter(c => !teardown.some(t => norm(t.competitor) && norm(c).includes(norm(t.competitor))))
   return <div className="mx-auto max-w-[980px]"><div className="mb-8"><p className="eyebrow">Scout / Competition</p><h1 className="mt-4 text-4xl font-semibold tracking-[-0.055em] md:text-5xl">Competition</h1><p className="mt-4 max-w-2xl text-base leading-6 text-muted-foreground">Where the market sits, what it leaves open, and how Scout can win.</p></div>{!f?<EmptyState item="Competition"/>:<>
-    {/* Moves since last run — pinned to the top */}
-    <SectionCard><SectionTitle>Moves since last run</SectionTitle>{f.competitor_changes?.length?<ul className="list-disc space-y-1 pl-5 text-sm">{f.competitor_changes.map(x=><li key={x}>{x}</li>)}</ul>:<p className="text-sm text-muted-foreground">No competitor movement on record yet — diffs appear from the second run.</p>}{(f.teardown??[]).length>0&&<div className="mt-5 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-xs"><thead className="border-y border-border font-mono text-[10px] uppercase text-muted-foreground"><tr>{['Competitor','Pricing','Rating','Top complaint','Switched from','Recent news'].map(x=><th className="py-3 pr-3" key={x}>{x}</th>)}</tr></thead><tbody>{(f.teardown??[]).map(x=><tr className="border-b border-border align-top" key={x.competitor}>{[x.competitor,x.pricing,x.rating,x.complaint,x.switched_from,x.news].map((v,vi)=><td className="py-3 pr-3" key={vi}>{v}</td>)}</tr>)}</tbody></table></div>}</SectionCard>
+    {/* Competitor intel scorecard — pinned to the top */}
+    <SectionCard><SectionTitle>Competitor intel · what changed since last run</SectionTitle>
+      {otherChanges.length>0&&<div className="mb-4 flex flex-wrap gap-2">{otherChanges.map(c=><span key={c} className="status-chip status-blue">⚑ {c}</span>)}</div>}
+      {teardown.length>0?<div className="overflow-x-auto"><table className="w-full min-w-[920px] text-left text-xs">
+        <thead className="border-y border-border font-mono text-[10px] uppercase text-muted-foreground"><tr>{['Competitor','Serves','Pricing','Rating','Top complaint · their gap','Switched from','Latest move','Δ since last run'].map(h=><th className="py-3 pr-3" key={h}>{h}</th>)}</tr></thead>
+        <tbody>{teardown.map(t=>{const chg=changeFor(t.competitor); return <tr key={t.competitor} className="border-b border-border align-top">
+          <td className="py-3 pr-3 font-medium">{t.competitor}</td>
+          <td className="py-3 pr-3 text-muted-foreground">{segFor(t.competitor)||'—'}</td>
+          <td className="py-3 pr-3 font-mono">{t.pricing||'—'}</td>
+          <td className="py-3 pr-3">{t.rating||'—'}</td>
+          <td className="py-3 pr-3 text-[color:var(--color-neg)]">{t.complaint||'—'}</td>
+          <td className="py-3 pr-3 text-muted-foreground">{t.switched_from||'—'}</td>
+          <td className="py-3 pr-3">{t.news||'—'}</td>
+          <td className="py-3 pr-3">{chg.length?<span className="status-chip status-amber whitespace-normal">▲ {chg.join('; ')}</span>:<span className="text-muted-foreground">no change</span>}</td>
+        </tr>})}</tbody>
+      </table></div>:<p className="text-sm text-muted-foreground">No competitor teardown on record yet — the scorecard fills once Scout has scraped competitors, and the Δ column lights up from the second run.</p>}
+    </SectionCard>
 
     {/* Positioning map — smaller, readable, less wordy */}
     <SectionCard className="mt-4"><SectionTitle>Positioning map</SectionTitle><div className="mx-auto max-w-[480px]"><svg viewBox="0 0 480 380" className="w-full" role="img" aria-label="Competitive positioning map"><rect x="52" y="16" width="396" height="300" fill="none" stroke="currentColor" strokeOpacity=".2"/><path d="M250 16v300M52 166h396" stroke="currentColor" strokeDasharray="4 4" strokeOpacity=".25"/>{players.map(p=>{const x=52+p.x*3.96,y=316-p.y*3;return <g key={p.name}><title>{p.note}</title>{p.is_subject&&<circle cx={x} cy={y} r="10" fill="none" stroke="var(--color-accent)" strokeDasharray="3 3"/>}<circle cx={x} cy={y} r="4" fill={p.is_subject?'var(--color-accent)':'#9b968c'}/><text x={x} y={y-8} textAnchor={x>400?'end':x<80?'start':'middle'} fontSize="10" fontWeight={p.is_subject?'700':'400'} fill="currentColor">{p.name}</text></g>})}<text x="250" y="344" textAnchor="middle" fontSize="10" fontWeight="600" fill="currentColor">{pos?.x_axis?.label}</text><text x="250" y="360" textAnchor="middle" fontSize="9" fill="currentColor" fillOpacity=".55">{pos?.x_axis?.low} → {pos?.x_axis?.high}</text><text x="46" y="166" textAnchor="middle" fontSize="10" fontWeight="600" fill="currentColor" transform="rotate(-90 46 166)">{pos?.y_axis?.label}</text></svg></div></SectionCard>
