@@ -16,7 +16,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `github.com/Nihaa21/scout-vision-console`. Don't extend it; remove it only in a
   deliberate PR that keeps `/app/stats` and the redirects working.
 - Commands: `npm i`, `npm run dev`, `npm run build` (must pass before pushing).
-  Branch + PR; never push to `main` directly.
+  `main` is live (Vercel auto-deploys it); pull first, then commit straight to
+  `main`. Never force-push.
 - Never change the cron schedules or paths without the owner; the backend
   throttles refreshes to once per 20 h per market, so more frequent crons only
   burn API credits.
