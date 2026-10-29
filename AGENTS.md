@@ -7,11 +7,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Scout landing + crons — rules for every agent
 
 - This repo (`Nihaa21/scout-landing`) is deployed by Vercel as the project
-  `scout-landing`. It exists for two things: the **crons** in `vercel.json`
+  `scout-landing`. It exists for the **crons** in `vercel.json`
   (`/api/keepalive` daily 06:00 UTC keeps the Render backend awake;
-  `/api/watch-refresh` Sundays 12:00 UTC re-listens to stale watched markets)
-  and the `/app/stats` visitor page. `/` and `/app` redirect to the canonical
-  console `https://scout-vision-console.vercel.app` (see `next.config.ts`).
+  `/api/watch-refresh` Sundays 12:00 UTC re-listens to stale watched markets),
+  the public landing at `/`, and the `/app/stats` visitor page. `/` is the
+  public landing again; `/app` still redirects to the canonical console
+  `https://scout-vision-console.vercel.app` (see `next.config.ts`).
 - The old console under `app/app/` is superseded by the Lovable-built one in
   `github.com/Nihaa21/scout-vision-console`. Don't extend it; remove it only in a
   deliberate PR that keeps `/app/stats` and the redirects working.

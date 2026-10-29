@@ -16,16 +16,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    "https://scout-landing-nihaghali554-1940-nihaghali554-1940s-projects.vercel.app",
-  ),
+  metadataBase: new URL("https://scout-landing-kappa.vercel.app"),
   title: "scout — 0→1 product research",
   description:
-    "Research what the market thinks — before you build it. Scout reads public feedback, finds the themes, and hands you the brief.",
+    "Research what the market thinks — before you build it. Enterpret’s brain, pointed at the market you’re entering.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "scout — 0→1 product research",
     description:
-      "Research what the market thinks — before you build it. Scout reads public feedback, finds the themes, and hands you the brief.",
+      "Research what the market thinks — before you build it. Enterpret’s brain, pointed at the market you’re entering.",
+    url: "/",
     type: "website",
   },
 };
