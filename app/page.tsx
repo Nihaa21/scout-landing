@@ -1,29 +1,37 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { track } from "@/lib/track";
 
-const PILLARS = [
+const SURFACES = [
   {
-    k: "Watch",
-    title: "Competitor moves, diffed",
-    body: "Scout re-reads the market on every run — pricing, launches, complaints — and tells you what changed since last time.",
+    id: "radar",
+    label: "Radar",
+    job: "See what moved in the market since the last listen.",
   },
   {
-    k: "Listen",
-    title: "The market's crowd, ranked",
-    body: "Real voices from forums, reviews, and communities become ranked signals. Every claim carries a receipt back to its source.",
+    id: "competitor",
+    label: "Competitor",
+    job: "Spot their gaps — complaints, pricing, latest moves — with receipts.",
   },
   {
-    k: "Understand",
-    title: "From gap to roadmap",
-    body: "What research can't settle becomes interview questions; what you hear back becomes a ranked, evidence-backed roadmap.",
+    id: "interviews",
+    label: "Interviews",
+    job: "Turn unsettled research into Mom-Test questions you can ask.",
   },
-];
+  {
+    id: "roadmap",
+    label: "Roadmap",
+    job: "Rank what to build next against the evidence that closed the assumption.",
+  },
+] as const;
+
+type SurfaceId = (typeof SURFACES)[number]["id"];
 
 export default function Home() {
+  const [active, setActive] = useState<SurfaceId>("radar");
+
   useEffect(() => {
     track("page_view", {
       page: "landing",
@@ -31,103 +39,297 @@ export default function Home() {
     });
   }, []);
 
+  const surface = SURFACES.find((item) => item.id === active) ?? SURFACES[0];
+
+  function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const key = event.key;
+    if (key !== "ArrowRight" && key !== "ArrowLeft" && key !== "Home" && key !== "End") return;
+    event.preventDefault();
+    const next =
+      key === "ArrowRight"
+        ? (index + 1) % SURFACES.length
+        : key === "ArrowLeft"
+          ? (index - 1 + SURFACES.length) % SURFACES.length
+          : key === "Home"
+            ? 0
+            : SURFACES.length - 1;
+    const id = SURFACES[next].id;
+    setActive(id);
+    document.getElementById(`surface-${id}`)?.focus();
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <p className="sr-only">
-        Scout is a research agent for 0-to-1 product work. It gathers public
-        feedback across platforms, extracts ranked themes with quotes, maps
-        pain points, builds an interview agenda, and produces a full
-        competitive breakdown — before you build the product.
+        Scout researches what the market thinks before you build it. The console
+        surfaces are Radar, Competitor, Interviews, and Roadmap.
       </p>
 
-      <div className="no-print absolute top-4 right-5 sm:right-8 z-10">
-        <Link
-          href="/app"
-          onClick={() => track("console_click", { from: "header" })}
-          className="hairline rounded-full px-3.5 py-1.5 font-mono text-[11.5px] text-ink-soft hover:text-ink hover:border-accent/50 transition-colors duration-200"
-        >
-          Open Scout →
-        </Link>
-      </div>
-
       <main className="flex-1 px-5 sm:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-2xl mx-auto text-center pt-24 sm:pt-36 pb-14"
-        >
-          {/* branding — big, center, with a soft accent glow behind it */}
-          <div className="relative inline-block">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[150%] w-[185%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(ellipse at center, rgba(31,111,191,0.28), rgba(31,111,191,0.09) 45%, transparent 72%)",
-              }}
-            />
-            <p className="text-[52px] sm:text-[70px] leading-none font-semibold tracking-[-0.045em]">
-              Scout
-            </p>
-          </div>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <span className="h-px w-8 bg-[var(--color-hairline)]" />
-            <p className="font-mono text-[13px] sm:text-[14px] tracking-[0.12em] uppercase text-accent">
-              <span className="font-semibold">0→1</span> product research
-            </p>
-            <span className="h-px w-8 bg-[var(--color-hairline)]" />
-          </div>
+        <div className="mx-auto w-full max-w-[960px] pt-14 pb-16 sm:pt-20 sm:pb-20">
+          <p className="text-[15px] font-medium tracking-[-0.02em]">Scout</p>
 
-          <h1 className="mt-8 text-[17px] sm:text-[19px] font-normal text-ink-soft leading-relaxed max-w-[46ch] mx-auto">
+          <h1 className="mt-8 max-w-[17em] text-[32px] font-medium leading-[1.15] tracking-[-0.035em] text-ink sm:max-w-[20em] sm:text-[40px]">
             Research what the market thinks — before you build it.
-            <span className="block mt-2">
-              Scout reads the crowd, finds the themes, maps the pain, writes
-              your user interview questions, and hands you the roadmap.
-            </span>
           </h1>
+          <p className="mt-4 max-w-[40rem] text-[15px] leading-relaxed text-ink-soft">
+            Enterpret’s brain, pointed at the market you’re entering.
+          </p>
 
-          <div className="mt-10">
+          <section
+            className="hairline mt-10 overflow-hidden rounded-[12px] bg-paper"
+            aria-label="What’s inside Scout"
+          >
+            <div role="tablist" aria-label="Console surfaces" className="flex gap-6 overflow-x-auto border-b-[0.5px] border-[var(--color-hairline)] px-4 sm:px-5">
+              {SURFACES.map((item, index) => {
+                const selected = item.id === active;
+                return (
+                  <button
+                    key={item.id}
+                    id={`surface-${item.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    aria-controls="surface-peek"
+                    tabIndex={selected ? 0 : -1}
+                    onClick={() => setActive(item.id)}
+                    onKeyDown={(event) => onTabKeyDown(event, index)}
+                    className={`-mb-px shrink-0 border-b-2 py-3 text-[14px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
+                      selected
+                        ? "border-accent text-accent"
+                        : "border-transparent text-ink-soft hover:text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="min-h-[2.6rem] px-4 pt-3 text-[14px] leading-snug text-ink sm:px-5" aria-live="polite">
+              {surface.job}
+            </p>
+
+            <div
+              id="surface-peek"
+              role="tabpanel"
+              aria-labelledby={`surface-${surface.id}`}
+              className="mt-3 h-[268px] overflow-x-auto overflow-y-hidden border-t-[0.5px] border-[var(--color-hairline)]"
+            >
+              <div className="flex justify-end px-4 pt-2 sm:px-5">
+                <span className="font-mono text-[10px] text-ink-faint">Sample data</span>
+              </div>
+              {active === "radar" && <RadarPeek />}
+              {active === "competitor" && <CompetitorPeek />}
+              {active === "interviews" && <InterviewsPeek />}
+              {active === "roadmap" && <RoadmapPeek />}
+            </div>
+          </section>
+
+          <div className="mt-8">
             <Link
               href="/app"
               onClick={() => track("console_click", { from: "hero" })}
-              className="inline-flex items-center gap-2 rounded-[10px] bg-accent px-6 py-3 text-[14px] font-semibold text-white shadow-sm hover:bg-accent-deep transition-colors duration-200"
+              className="inline-flex items-center rounded-[10px] bg-accent px-6 py-3 text-[14px] font-semibold text-white hover:bg-accent-deep transition-colors duration-200"
             >
-              Open Scout →
+              Open Scout
             </Link>
             <p className="mt-3 font-mono text-[11px] text-ink-faint">
-              paste a product idea, a market question, or a competitor — Scout
-              does the rest
+              paste a pitch, a URL, an industry, competitors, or notes
             </p>
           </div>
-        </motion.div>
-
-        {/* the loop, in three moves */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-4xl mx-auto pb-24"
-        >
-          <div className="grid gap-4 sm:grid-cols-3">
-            {PILLARS.map((p, i) => (
-              <div key={p.k} className="hairline rounded-[12px] bg-surface/70 p-5 text-left">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
-                  {String(i + 1).padStart(2, "0")} · {p.k}
-                </p>
-                <h2 className="mt-2 text-[14.5px] font-semibold">{p.title}</h2>
-                <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{p.body}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        </div>
       </main>
 
-      <footer className="no-print hairline-t px-5 sm:px-8 py-4">
-        <p className="font-mono text-[11px] text-ink-faint max-w-6xl mx-auto text-center">
+      <footer className="no-print hairline-t px-5 py-4 sm:px-8">
+        <p className="mx-auto max-w-[960px] text-center font-mono text-[11px] text-ink-faint">
           Scout · Autonomous Voice-of-Customer Research
         </p>
       </footer>
     </div>
+  );
+}
+
+function RadarPeek() {
+  const rows = [
+    ["Research is scattered across tools", "18", "91", "rising", "62 76 91"],
+    ["Teams need synthesis before prioritization", "17", "84", "new", ""],
+    ["Interview recruiting is the first bottleneck", "16", "77", "stable", ""],
+    ["Founders want evidence on roadmap bets", "15", "70", "rising", ""],
+    ["Existing tools are archive-first", "14", "63", "fading", ""],
+  ] as const;
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:px-5">
+        <span className="text-[12px] font-medium">Since last run</span>
+        <span className="font-mono text-[10px] text-ink-faint">3 runs · 21 Aug</span>
+        <span className="font-mono text-[10px] text-[color:var(--color-pos)]">rising · Scattered research</span>
+        <span className="font-mono text-[10px] text-accent">new · Synthesis before prioritization</span>
+        <span className="font-mono text-[10px] text-[color:var(--color-mid)]">fading · Archive-first workflows</span>
+      </div>
+      <table className="w-full table-fixed border-collapse text-left">
+        <thead>
+          <tr className="border-y-[0.5px] border-[var(--color-hairline)] font-mono text-[10px] text-ink-faint">
+            <th className="px-4 py-2 font-normal sm:px-5">Signal</th>
+            <th className="w-12 px-2 py-2 font-normal sm:w-14">Freq</th>
+            <th className="w-12 px-2 py-2 font-normal sm:w-14">Score</th>
+            <th className="w-16 px-2 py-2 font-normal sm:w-28">Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([signal, freq, score, trend, spark]) => (
+            <tr key={signal} className="border-b-[0.5px] border-[var(--color-hairline)] text-[12.5px]">
+              <td className="px-4 py-2.5 sm:px-5">{signal}</td>
+              <td className="px-2 py-2.5 font-mono tabular-nums text-ink-soft">{freq}</td>
+              <td className="px-2 py-2.5 font-mono tabular-nums">{score}</td>
+              <td className="px-2 py-2.5">
+                <span className="inline-flex items-center gap-2">
+                  <Trend trend={trend} />
+                  {spark ? <Spark series={spark} /> : null}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CompetitorPeek() {
+  const rows = [
+    ["Dovetail", "$15/seat", "4.6", "Hard to synthesize", "Added AI summaries", "▲ $12 → $15"],
+    ["Productboard", "$20/seat", "4.4", "Built for later-stage teams", "Expanded insights", "no change"],
+    ["Grain", "$19/seat", "—", "Clips, no ranking", "—", "no change"],
+    ["Canny", "usage", "—", "Boards stall before a decision", "New board templates", "▲ templates"],
+  ] as const;
+
+  return (
+    <div>
+      <p className="px-4 pt-1 pb-2 text-[12px] font-medium sm:px-5">Competitor intel</p>
+      <div className="sm:hidden">
+        {rows.map(([name, pricing, rating, complaint, move, delta]) => (
+          <div key={name} className="border-t-[0.5px] border-[var(--color-hairline)] px-4 py-2.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[13px] font-medium">{name}</span>
+              <span className="shrink-0 font-mono text-[11px] text-ink-soft">{pricing} · {rating}</span>
+            </div>
+            <p className="mt-1 text-[12.5px] text-[color:var(--color-neg)]">{complaint}</p>
+            <p className="mt-1 font-mono text-[10px] text-ink-faint">{move} · {delta} · receipt · forum</p>
+          </div>
+        ))}
+      </div>
+      <table className="hidden w-full border-collapse text-left sm:table">
+        <thead>
+          <tr className="border-y-[0.5px] border-[var(--color-hairline)] font-mono text-[10px] text-ink-faint">
+            {["Competitor", "Pricing", "Rating", "Top complaint", "Latest move", "Δ"].map((heading) => (
+              <th key={heading} className="px-3 py-2 font-normal first:pl-4 first:sm:pl-5">{heading}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([name, pricing, rating, complaint, move, delta]) => (
+            <tr key={name} className="border-b-[0.5px] border-[var(--color-hairline)] align-top text-[12.5px]">
+              <td className="py-2.5 pr-3 pl-4 font-medium sm:pl-5">{name}</td>
+              <td className="px-3 py-2.5 font-mono text-[11px]">{pricing}</td>
+              <td className="px-3 py-2.5 font-mono tabular-nums">{rating}</td>
+              <td className="px-3 py-2.5 text-[color:var(--color-neg)]">
+                {complaint}
+                <span className="mt-0.5 block font-mono text-[10px] text-ink-faint">receipt · forum</span>
+              </td>
+              <td className="px-3 py-2.5 text-ink-soft">{move}</td>
+              <td className="px-3 py-2.5 font-mono text-[10px] text-[color:var(--color-mid)]">{delta}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function InterviewsPeek() {
+  const rows = [
+    ["Q1", "Walk me through the last time research changed your roadmap.", "Mom-Test clean · behavioral", "pos", "closes a1"],
+    ["Q2", "Where do interview notes go after a call?", "Mom-Test clean", "pos", "closes a3"],
+    ["Q3", "How do you currently compare competing customer pains?", "Mom-Test clean · behavioral", "pos", "closes a4"],
+    ["Q4", "Would you pay for a tool that ranks pains?", "pricing-hypo · 70", "mid", "closes a2"],
+  ] as const;
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 pt-1 pb-3 sm:px-5">
+        <span className="font-mono text-[22px] leading-none tabular-nums text-accent">82%</span>
+        <span className="text-[12.5px] text-ink-soft">resolved · 12 web-resolvable · 4 only a human can close</span>
+      </div>
+      <ol>
+        {rows.map(([id, question, score, tone, closes]) => (
+          <li key={id} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-2 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-2.5 sm:px-5">
+            <span className="font-mono text-[12px] text-accent">{id}</span>
+            <div>
+              <p className="text-[13px] leading-snug">{question}</p>
+              <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px]">
+                <span className={tone === "pos" ? "text-[color:var(--color-pos)]" : "text-[color:var(--color-mid)]"}>{score}</span>
+                <span className="text-accent">{closes}</span>
+                <span className="text-ink-faint">receipt · Reddit</span>
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function RoadmapPeek() {
+  const rows = [
+    ["01", "Evidence-ranked opportunity brief", "Turns scattered signals into a decision-ready shortlist.", "91%", "closes a4"],
+    ["02", "Interview loop with gap-aware questions", "Routes unsettled assumptions into conversations.", "87%", "closes a5"],
+    ["03", "Source connectors for research context", "Keeps the original context on every signal.", "79%", "closes a3"],
+    ["04", "Decision snapshots for roadmap handoff", "Makes the why behind a bet shareable.", "74%", "closes a6"],
+  ] as const;
+
+  return (
+    <ol>
+      {rows.map(([rank, title, rationale, confidence, closes]) => (
+        <li key={rank} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] gap-3 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-3 sm:px-5">
+          <span className="font-mono text-[12px] text-accent">{rank}</span>
+          <div>
+            <p className="text-[13px] font-medium leading-snug">{title}</p>
+            <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">{rationale}</p>
+            <p className="mt-1 font-mono text-[10px] text-ink-faint">{closes} · receipt on file</p>
+          </div>
+          <span className="font-mono text-[16px] tabular-nums text-[color:var(--color-pos)]">{confidence}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function Trend({ trend }: { trend: string }) {
+  const color =
+    trend === "rising"
+      ? "text-[color:var(--color-pos)]"
+      : trend === "fading"
+        ? "text-[color:var(--color-mid)]"
+        : trend === "new"
+          ? "text-accent"
+          : "text-ink-soft";
+  return <span className={`font-mono text-[10px] ${color}`}>{trend}</span>;
+}
+
+function Spark({ series }: { series: string }) {
+  const values = series.split(" ").map(Number);
+  const points = values
+    .map((value, index) => {
+      const x = (index / (values.length - 1)) * 52;
+      const y = 16 - (value / 100) * 14;
+      return `${x},${y}`;
+    })
+    .join(" ");
+  return (
+    <svg width="52" height="18" viewBox="0 0 52 18" aria-hidden="true" className="hidden text-accent sm:block">
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.25" />
+    </svg>
   );
 }
