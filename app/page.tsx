@@ -130,7 +130,7 @@ export default function Home() {
             <Link
               href="/app"
               onClick={() => track("console_click", { from: "hero" })}
-              className="inline-flex items-center rounded-[10px] bg-accent px-6 py-3 text-[14px] font-semibold text-white hover:bg-accent-deep transition-colors duration-200"
+              className="inline-flex items-center rounded-[12px] bg-accent px-6 py-3 text-[14px] font-semibold text-white hover:bg-accent-deep transition-colors duration-200"
             >
               Open Scout
             </Link>
@@ -215,7 +215,7 @@ function CompetitorPeek() {
               <span className="text-[13px] font-medium">{name}</span>
               <span className="shrink-0 font-mono text-[11px] text-ink-soft">{pricing} · {rating}</span>
             </div>
-            <p className="mt-1 text-[12.5px] text-[color:var(--color-neg)]">{complaint}</p>
+            <p className="mt-1 text-[12.5px] text-[#D9A441]">{complaint}</p>
             <p className="mt-1 font-mono text-[10px] text-ink-faint">{move} · {delta} · receipt · forum</p>
           </div>
         ))}
@@ -234,7 +234,7 @@ function CompetitorPeek() {
               <td className="py-2.5 pr-3 pl-4 font-medium sm:pl-5">{name}</td>
               <td className="px-3 py-2.5 font-mono text-[11px]">{pricing}</td>
               <td className="px-3 py-2.5 font-mono tabular-nums">{rating}</td>
-              <td className="px-3 py-2.5 text-[color:var(--color-neg)]">
+              <td className="px-3 py-2.5 text-[#D9A441]">
                 {complaint}
                 <span className="mt-0.5 block font-mono text-[10px] text-ink-faint">receipt · forum</span>
               </td>
@@ -250,28 +250,35 @@ function CompetitorPeek() {
 
 function InterviewsPeek() {
   const rows = [
-    ["Q1", "Walk me through the last time research changed your roadmap.", "Mom-Test clean · behavioral", "pos", "closes a1"],
-    ["Q2", "Where do interview notes go after a call?", "Mom-Test clean", "pos", "closes a3"],
-    ["Q3", "How do you currently compare competing customer pains?", "Mom-Test clean · behavioral", "pos", "closes a4"],
-    ["Q4", "Would you pay for a tool that ranks pains?", "pricing-hypo · 70", "mid", "closes a2"],
+    ["Q1", "Walk me through the last time research changed your roadmap.", "", "closes a1"],
+    ["Q2", "Where do interview notes go after a call?", "", "closes a3"],
+    ["Q3", "How do you currently compare competing customer pains?", "", "closes a4"],
+    ["Q4", "Would you pay for a tool that ranks pains?", "asks about hypothetical spend", "closes a2"],
   ] as const;
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 pt-1 pb-3 sm:px-5">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 pt-1 pb-2 sm:px-5">
         <span className="font-mono text-[22px] leading-none tabular-nums text-accent">82%</span>
         <span className="text-[12.5px] text-ink-soft">resolved · 12 web-resolvable · 4 only a human can close</span>
       </div>
       <ol>
-        {rows.map(([id, question, score, tone, closes]) => (
-          <li key={id} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-2 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-2.5 sm:px-5">
+        {rows.map(([id, question, flag, closes]) => (
+          <li key={id} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-2 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-1.5 sm:px-5">
             <span className="font-mono text-[12px] text-accent">{id}</span>
             <div>
               <p className="text-[13px] leading-snug">{question}</p>
-              <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px]">
-                <span className={tone === "pos" ? "text-[color:var(--color-pos)]" : "text-[color:var(--color-mid)]"}>{score}</span>
-                <span className="text-accent">{closes}</span>
-                <span className="text-ink-faint">receipt · Reddit</span>
+              <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
+                {flag ? (
+                  <>
+                    <span className="rounded-full border-[0.5px] border-[#D9A441] px-1.5 py-px font-mono text-[#D9A441]">Mom-Test flagged</span>
+                    <span className="text-[11px] text-ink-soft">{flag}</span>
+                  </>
+                ) : (
+                  <span className="font-mono text-ink-faint">Mom-Test clean</span>
+                )}
+                <span className="font-mono text-accent">{closes}</span>
+                <span className="font-mono text-ink-faint">receipt · Reddit</span>
               </p>
             </div>
           </li>
