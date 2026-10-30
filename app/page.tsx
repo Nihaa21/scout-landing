@@ -1,8 +1,40 @@
 "use client";
 
-import { useEffect, useState, type KeyboardEvent } from "react";
-import Link from "next/link";
+import { Fragment, useEffect, useState, type KeyboardEvent } from "react";
 import { track } from "@/lib/track";
+import PlatformLogo from "@/components/PlatformLogo";
+
+const OPEN_SCOUT_HREF =
+  "https://scout-vision-console.vercel.app/?from=landing&cta=open_scout";
+
+const SOURCES = [
+  { key: "hacker news", label: "Hacker News" },
+  { key: "reddit", label: "Reddit" },
+  { key: "youtube", label: "YouTube" },
+  { key: "web", label: "Web" },
+  { key: "g2", label: "G2" },
+  { key: "github", label: "GitHub" },
+  { key: "app store", label: "App Store" },
+  { key: "bluesky", label: "Bluesky" },
+] as const;
+
+const STEPS = [
+  {
+    n: "1",
+    title: "Name the market",
+    body: "Paste a pitch, URL, industry, or competitors.",
+  },
+  {
+    n: "2",
+    title: "Scout listens",
+    body: "Eight public sources light up as voices are gathered — with receipts.",
+  },
+  {
+    n: "3",
+    title: "Decide with evidence",
+    body: "Radar → Competitor → Interviews → Roadmap, each claim checkable.",
+  },
+] as const;
 
 const SURFACES = [
   {
@@ -61,91 +93,159 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
       <p className="sr-only">
-        Scout researches what the market thinks before you build it. The console
-        surfaces are Radar, Competitor, Interviews, and Roadmap.
+        When you have no customers of your own, Scout listens to the market’s.
+        Open Scout, then look at Radar, Competitor, Interviews, and Roadmap.
       </p>
 
       <main className="flex-1 px-5 sm:px-8">
-        <div className="mx-auto w-full max-w-[960px] pt-14 pb-16 sm:pt-20 sm:pb-20">
+        <div className="mx-auto w-full max-w-[960px] pt-14 pb-20 sm:pt-20 sm:pb-28">
           <p className="text-[15px] font-medium tracking-[-0.02em]">Scout</p>
 
-          <h1 className="mt-8 max-w-[17em] text-[32px] font-medium leading-[1.15] tracking-[-0.035em] text-ink sm:max-w-[20em] sm:text-[40px]">
-            Research what the market thinks — before you build it.
+          <p className="mt-8 font-mono text-[11px] text-ink-soft">0→1 market research</p>
+          <h1 className="mt-3 max-w-[20em] text-balance text-[32px] font-medium leading-[1.15] tracking-[-0.035em] text-ink sm:text-[40px]">
+            When you have no customers of your own, Scout listens to the market’s.
           </h1>
-          <p className="mt-4 max-w-[40rem] text-[15px] leading-relaxed text-ink-soft">
-            Enterpret’s brain, pointed at the market you’re entering.
+          <p className="mt-4 max-w-[38rem] text-pretty text-[16px] leading-relaxed text-ink-soft sm:text-[17px]">
+            Enterpret’s brain, pointed at the market you’re entering — built for 0→1 when you have no users of your own.
           </p>
 
-          <section
-            className="hairline mt-10 overflow-hidden rounded-[12px] bg-paper"
-            aria-label="What’s inside Scout"
-          >
-            <div role="tablist" aria-label="Console surfaces" className="flex gap-6 overflow-x-auto border-b-[0.5px] border-[var(--color-hairline)] px-4 sm:px-5">
-              {SURFACES.map((item, index) => {
-                const selected = item.id === active;
-                return (
-                  <button
-                    key={item.id}
-                    id={`surface-${item.id}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    aria-controls="surface-peek"
-                    tabIndex={selected ? 0 : -1}
-                    onClick={() => setActive(item.id)}
-                    onKeyDown={(event) => onTabKeyDown(event, index)}
-                    className={`-mb-px shrink-0 border-b-2 py-3 text-[14px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
-                      selected
-                        ? "border-accent text-accent"
-                        : "border-transparent text-ink-soft hover:text-ink"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <p className="min-h-[2.6rem] px-4 pt-3 text-[14px] leading-snug text-ink sm:px-5" aria-live="polite">
-              {surface.job}
-            </p>
-
-            <div
-              id="surface-peek"
-              role="tabpanel"
-              aria-labelledby={`surface-${surface.id}`}
-              className="mt-3 h-[268px] overflow-x-auto overflow-y-hidden border-t-[0.5px] border-[var(--color-hairline)]"
-            >
-              <div className="flex justify-end px-4 pt-2 sm:px-5">
-                <span className="font-mono text-[10px] text-ink-faint">Sample data</span>
-              </div>
-              {active === "radar" && <RadarPeek />}
-              {active === "competitor" && <CompetitorPeek />}
-              {active === "interviews" && <InterviewsPeek />}
-              {active === "roadmap" && <RoadmapPeek />}
-            </div>
-          </section>
-
           <div className="mt-8">
-            <Link
-              href="/app"
-              onClick={() => track("console_click", { from: "hero" })}
-              className="inline-flex items-center rounded-[12px] bg-accent px-6 py-3 text-[14px] font-semibold text-white hover:bg-accent-deep transition-colors duration-200"
-            >
-              Open Scout
-            </Link>
-            <p className="mt-3 font-mono text-[11px] text-ink-faint">
+            <OpenScoutLink from="hero" />
+            <p className="mt-3 font-mono text-[11px] text-ink-soft">
               paste a pitch, a URL, an industry, competitors, or notes
             </p>
           </div>
+
+          <SourceStrip />
+
+          <section className="mt-14 sm:mt-16" aria-labelledby="how-it-works">
+            <h2 id="how-it-works" className="text-[15px] font-medium tracking-[-0.02em]">
+              How it works
+            </h2>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-4">
+              {STEPS.map((step) => (
+                <li
+                  key={step.n}
+                  className="rounded-[12px] border-[0.5px] border-[var(--color-hairline)] bg-paper px-5 py-5"
+                >
+                  <p className="font-mono text-[13px] text-accent">{step.n}</p>
+                  <h3 className="mt-3 text-[15px] font-medium leading-snug sm:text-[16px]">{step.title}</h3>
+                  <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{step.body}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="mt-14 sm:mt-20" aria-labelledby="peeks-heading">
+            <h2 id="peeks-heading" className="text-[15px] font-medium tracking-[-0.02em]">
+              One run. Four places to look.
+            </h2>
+            <div
+              className="hairline mt-5 overflow-hidden rounded-[12px] bg-paper"
+              aria-label="What’s inside Scout"
+            >
+              <div role="tablist" aria-label="Console surfaces" className="flex gap-6 overflow-x-auto border-b-[0.5px] border-[var(--color-hairline)] px-4 sm:px-5">
+                {SURFACES.map((item, index) => {
+                  const selected = item.id === active;
+                  return (
+                    <button
+                      key={item.id}
+                      id={`surface-${item.id}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      aria-controls="surface-peek"
+                      tabIndex={selected ? 0 : -1}
+                      onClick={() => setActive(item.id)}
+                      onKeyDown={(event) => onTabKeyDown(event, index)}
+                      className={`-mb-px shrink-0 border-b-2 py-3 text-[14px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
+                        selected
+                          ? "border-accent text-accent"
+                          : "border-transparent text-ink-soft hover:text-ink"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="min-h-[2.6rem] px-4 pt-3 text-[14px] leading-snug text-ink sm:px-5" aria-live="polite">
+                {surface.job}
+              </p>
+
+              <div
+                id="surface-peek"
+                role="tabpanel"
+                aria-labelledby={`surface-${surface.id}`}
+                className="mt-3 overflow-x-auto border-t-[0.5px] border-[var(--color-hairline)]"
+              >
+                <div className="flex justify-end px-4 pt-2 sm:px-5">
+                  <span className="font-mono text-[10px] text-ink-faint">Sample data</span>
+                </div>
+                {active === "radar" && <RadarPeek />}
+                {active === "competitor" && <CompetitorPeek />}
+                {active === "interviews" && <InterviewsPeek />}
+                {active === "roadmap" && <RoadmapPeek />}
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-16 max-w-[36rem] sm:mt-24" aria-label="Open Scout">
+            <p className="text-balance text-[18px] font-medium leading-snug tracking-[-0.02em] sm:text-[20px]">
+              For teams doing research without a research team.
+            </p>
+            <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+              Watchtower keeps listening to markets you care about.
+            </p>
+            <div className="mt-6">
+              <OpenScoutLink from="closing" />
+            </div>
+          </section>
         </div>
       </main>
 
       <footer className="no-print hairline-t px-5 py-4 sm:px-8">
-        <p className="mx-auto max-w-[960px] text-center font-mono text-[11px] text-ink-faint">
-          Scout · Autonomous Voice-of-Customer Research
+        <p className="mx-auto max-w-[960px] text-center font-mono text-[11px] text-ink-soft">
+          Scout · 0→1 market research
         </p>
       </footer>
+    </div>
+  );
+}
+
+function OpenScoutLink({ from }: { from: "hero" | "closing" }) {
+  return (
+    <a
+      href={OPEN_SCOUT_HREF}
+      onClick={() =>
+        track("console_click", from === "hero" ? { from: "hero" } : { from: "closing" })
+      }
+      className="inline-flex items-center rounded-[12px] bg-accent px-6 py-3 text-[14px] font-semibold text-white transition-colors duration-200 hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+    >
+      Open Scout
+    </a>
+  );
+}
+
+function SourceStrip() {
+  return (
+    <div className="mt-10">
+      <ul
+        aria-label="Listening across Hacker News, Reddit, YouTube, Web, G2, GitHub, App Store, and Bluesky"
+        className="flex flex-wrap gap-2"
+      >
+        {SOURCES.map((source) => (
+          <li
+            key={source.key}
+            className="inline-flex items-center gap-2 rounded-[12px] border-[0.5px] border-[var(--color-hairline)] bg-paper px-3 py-2 text-[13px] text-ink"
+          >
+            <PlatformLogo name={source.key} className="size-[18px] shrink-0 text-ink-soft" />
+            {source.label}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 font-mono text-[11px] text-ink-soft">8 sources · public market voices</p>
     </div>
   );
 }
@@ -178,18 +278,30 @@ function RadarPeek() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(([signal, freq, score, trend, spark]) => (
-            <tr key={signal} className="border-b-[0.5px] border-[var(--color-hairline)] text-[12.5px]">
-              <td className="px-4 py-2.5 sm:px-5">{signal}</td>
-              <td className="px-2 py-2.5 font-mono tabular-nums text-ink-soft">{freq}</td>
-              <td className="px-2 py-2.5 font-mono tabular-nums">{score}</td>
-              <td className="px-2 py-2.5">
-                <span className="inline-flex items-center gap-2">
-                  <Trend trend={trend} />
-                  {spark ? <Spark series={spark} /> : null}
-                </span>
-              </td>
-            </tr>
+          {rows.map(([signal, freq, score, trend, spark], index) => (
+            <Fragment key={signal}>
+              <tr className="border-b-[0.5px] border-[var(--color-hairline)] text-[12.5px]">
+                <td className="px-4 py-2.5 sm:px-5">{signal}</td>
+                <td className="px-2 py-2.5 font-mono tabular-nums text-ink-soft">{freq}</td>
+                <td className="px-2 py-2.5 font-mono tabular-nums">{score}</td>
+                <td className="px-2 py-2.5">
+                  <span className="inline-flex items-center gap-2">
+                    <Trend trend={trend} />
+                    {spark ? <Spark series={spark} /> : null}
+                  </span>
+                </td>
+              </tr>
+              {index === 0 ? (
+                <tr className="border-b-[0.5px] border-[var(--color-hairline)]">
+                  <td colSpan={4} className="px-4 pt-1 pb-3 sm:px-5">
+                    <p className="text-[13px] italic leading-snug text-ink">
+                      “I have three docs open and none of them agree on what to do next.”
+                    </p>
+                    <p className="mt-1 font-mono text-[11px] text-ink-faint">Reddit · 18 mentions</p>
+                  </td>
+                </tr>
+              ) : null}
+            </Fragment>
           ))}
         </tbody>
       </table>
