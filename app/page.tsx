@@ -99,13 +99,13 @@ export default function Home() {
 
       <main className="flex-1 px-6 md:px-12">
         <div className="mx-auto w-full max-w-[1040px] pt-[120px] pb-16">
-          <p className="text-[15px] font-medium tracking-[-0.02em]">Scout</p>
+          <p className="text-[18px] font-bold tracking-[-0.03em]">Scout</p>
 
           <p className="mt-8 font-mono text-[12px] leading-4 font-medium text-ink-soft">0→1 market research</p>
           <h1 className="type-display mt-3 max-w-[640px] text-balance text-ink">
             When you have no customers of your own, Scout listens to the market’s.
           </h1>
-          <p className="mt-4 max-w-[640px] text-pretty text-[15px] font-medium leading-6 tracking-[-0.003em] text-ink-soft">
+          <p className="mt-4 max-w-[640px] text-pretty text-[15px] font-normal leading-6 tracking-[-0.003em] text-ink-soft">
             Enterpret’s brain, pointed at the market you’re entering — built for 0→1 when you have no users of your own.
           </p>
 
@@ -290,7 +290,7 @@ function RadarPeek() {
                 <td className="px-4 py-2.5 sm:px-5">{signal}</td>
                 <td className="num px-2 py-2.5 text-ink-soft">{freq}</td>
                 <td className="num px-2 py-2.5">{score}</td>
-                <td className="px-2 py-2.5">
+                <td className="overflow-hidden px-2 py-2.5">
                   <span className="inline-flex items-center gap-2">
                     <Trend trend={trend} />
                     {spark ? <Spark series={spark} /> : null}
@@ -391,7 +391,7 @@ function InterviewsPeek() {
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-4">
                 {flag ? (
                   <>
-                    <span className="inline-flex h-6 items-center rounded-[999px] bg-[#FBF3E2] px-2 text-[12px] leading-4 font-semibold text-[#85601B]">Mom-Test flagged</span>
+                    <span className="inline-flex h-6 items-center rounded-[999px] bg-warn-soft px-2 text-[12px] leading-4 font-semibold text-warn-text">Mom-Test flagged</span>
                     <span className="text-[13px] leading-[18px] text-ink-soft">{flag}</span>
                   </>
                 ) : (
@@ -449,13 +449,14 @@ function Spark({ series }: { series: string }) {
   const values = series.split(" ").map(Number);
   const points = values
     .map((value, index) => {
-      const x = (index / (values.length - 1)) * 52;
+      // 44 of 52 keeps the 1.25 stroke inside the trend cell's 8px padding.
+      const x = (index / (values.length - 1)) * 44;
       const y = 16 - (value / 100) * 14;
       return `${x},${y}`;
     })
     .join(" ");
   return (
-    <svg width="52" height="18" viewBox="0 0 52 18" aria-hidden="true" className="hidden text-accent sm:block">
+    <svg width="52" height="18" viewBox="0 0 52 18" aria-hidden="true" className="hidden overflow-hidden text-accent sm:block">
       <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.25" />
     </svg>
   );

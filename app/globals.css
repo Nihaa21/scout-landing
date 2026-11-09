@@ -9,6 +9,7 @@
   --color-ink: #1a2233;
   --color-ink-soft: #3d4656;
   --color-ink-muted: #5e6673;
+  /* ink-faint is for white surfaces only (it is exactly 4.50:1 on paper). */
   --color-ink-faint: #6c737f;
   --color-hairline: rgba(30, 27, 24, 0.1);
   --color-hairline-strong: rgba(30, 27, 24, 0.16);
@@ -22,6 +23,8 @@
   --color-mid: #946b1e;
   --color-neg: #c0392b;
   --color-new: #2463b0;
+  --color-warn-soft: #fbf3e2;
+  --color-warn-text: #85601b;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
@@ -157,9 +160,6 @@ body {
   box-shadow: var(--elevation-1);
 }
 .elev-2 {
-  box-shadow: var(--elevation-2);
-}
-.elev-float {
   box-shadow: var(--elevation-2);
 }
 

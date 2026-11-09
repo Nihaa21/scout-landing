@@ -118,7 +118,7 @@ export default function LiveBrief({
   return (
     <section
       aria-label={`Research brief for ${displayProduct}`}
-      className="print-root hairline rounded-[20px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/80 backdrop-blur-[3px] elev-float"
+      className="print-root hairline rounded-[20px] w-full max-w-6xl mx-auto overflow-hidden bg-surface/80 backdrop-blur-[3px] elev-2"
     >
       {/* header — product centered + prominent live/signals */}
       <header
