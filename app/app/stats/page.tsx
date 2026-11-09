@@ -25,18 +25,46 @@ const funnel = (v: VisitorRow): { label: string; cls: string } => {
   return { label: 'landed', cls: '' }
 }
 
+// Same console origin as next.config.ts. /login is that app's sign-in page.
+const CONSOLE_LOGIN_URL = 'https://scout-vision-console.vercel.app/login'
+
+type LoadProblem = 'auth' | 'asleep' | 'failed'
+
 export default function StatsPage() {
   const [data, setData] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [problem, setProblem] = useState<LoadProblem | null>(null)
 
   const load = useCallback(async () => {
-    setLoading(true); setError('')
+    setLoading(true)
+    setProblem(null)
+    let response: Response
     try {
-      const r = await fetch(`${API_BASE}/track/summary`)
-      if (!r.ok) throw new Error(String(r.status))
-      setData(await r.json())
-    } catch { setError('Could not load stats — is the backend awake?') } finally { setLoading(false) }
+      response = await fetch(`${API_BASE}/track/summary`)
+    } catch {
+      setData(null)
+      setProblem('asleep')
+      setLoading(false)
+      return
+    }
+    if (response.status === 401 || response.status === 403) {
+      setData(null)
+      setProblem('auth')
+    } else if (response.status >= 500) {
+      setData(null)
+      setProblem('asleep')
+    } else if (!response.ok) {
+      setData(null)
+      setProblem('failed')
+    } else {
+      try {
+        setData(await response.json())
+      } catch {
+        setData(null)
+        setProblem('failed')
+      }
+    }
+    setLoading(false)
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -50,7 +78,12 @@ export default function StatsPage() {
       <p className="text-sm text-muted-foreground">Everyone who opens the link on your resume, LinkedIn, or portfolio shows up here — where they came from, how far they got, and what they typed.</p>
 
       {loading && <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle size={14} className="animate-spin"/> loading the event stream…</p>}
-      {error && <p className="mt-8 text-sm text-[color:var(--color-neg)]">{error}</p>}
+      {problem === 'auth' && <div className="mt-8 rounded-xl border border-border bg-card p-5 md:p-6">
+        <p className="text-sm font-semibold">Sign in to view stats</p>
+        <a href={CONSOLE_LOGIN_URL} className="primary-button mt-4">Sign in</a>
+      </div>}
+      {problem === 'asleep' && <p className="mt-8 text-sm text-[color:var(--color-neg)]">Could not load stats — is the backend awake?</p>}
+      {problem === 'failed' && <p className="mt-8 text-sm text-[color:var(--color-neg)]">Could not load stats.</p>}
 
       {data && <>
         <div className="mt-6 flex flex-wrap gap-2">
