@@ -97,54 +97,58 @@ export default function Home() {
         Open Scout, then look at Radar, Competitor, Interviews, and Roadmap.
       </p>
 
-      <main className="flex-1 px-5 sm:px-8">
-        <div className="mx-auto w-full max-w-[960px] pt-14 pb-20 sm:pt-20 sm:pb-28">
+      <main className="flex-1 px-6 md:px-12">
+        <div className="mx-auto w-full max-w-[1040px] pt-[120px] pb-16">
           <p className="text-[15px] font-medium tracking-[-0.02em]">Scout</p>
 
-          <p className="mt-8 font-mono text-[11px] text-ink-soft">0→1 market research</p>
-          <h1 className="mt-3 max-w-[20em] text-balance text-[32px] font-medium leading-[1.15] tracking-[-0.035em] text-ink sm:text-[40px]">
+          <p className="mt-8 font-mono text-[12px] leading-4 font-medium text-ink-soft">0→1 market research</p>
+          <h1 className="type-display mt-3 max-w-[640px] text-balance text-ink">
             When you have no customers of your own, Scout listens to the market’s.
           </h1>
-          <p className="mt-4 max-w-[38rem] text-pretty text-[16px] leading-relaxed text-ink-soft sm:text-[17px]">
+          <p className="mt-4 max-w-[640px] text-pretty text-[15px] font-medium leading-6 tracking-[-0.003em] text-ink-soft">
             Enterpret’s brain, pointed at the market you’re entering — built for 0→1 when you have no users of your own.
           </p>
 
           <div className="mt-8">
             <OpenScoutLink from="hero" />
-            <p className="mt-3 font-mono text-[11px] text-ink-soft">
+            <p className="meta mt-3">
               paste a pitch, a URL, an industry, competitors, or notes
             </p>
           </div>
 
           <SourceStrip />
 
-          <section className="mt-14 sm:mt-16" aria-labelledby="how-it-works">
-            <h2 id="how-it-works" className="text-[15px] font-medium tracking-[-0.02em]">
+          <section className="mt-20 md:mt-[120px]" aria-labelledby="how-it-works">
+            <h2 id="how-it-works" className="section-title">
               How it works
             </h2>
-            <ol className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-4">
-              {STEPS.map((step) => (
+            <ol className="mt-4 grid sm:grid-cols-3">
+              {STEPS.map((step, index) => (
                 <li
                   key={step.n}
-                  className="rounded-[12px] border-[0.5px] border-[var(--color-hairline)] bg-paper px-5 py-5"
+                  className={`py-4 sm:px-6 sm:py-0 ${
+                    index > 0
+                      ? "border-t border-hairline sm:border-t-0 sm:border-l"
+                      : ""
+                  } ${index === 0 ? "sm:pl-0" : ""} ${index === STEPS.length - 1 ? "sm:pr-0" : ""}`}
                 >
-                  <p className="font-mono text-[13px] text-accent">{step.n}</p>
-                  <h3 className="mt-3 text-[15px] font-medium leading-snug sm:text-[16px]">{step.title}</h3>
-                  <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{step.body}</p>
+                  <p className="num text-[13px] leading-[18px] text-accent-text">{step.n}</p>
+                  <h3 className="card-title mt-3">{step.title}</h3>
+                  <p className="mt-2 text-[15px] leading-6 text-ink-soft">{step.body}</p>
                 </li>
               ))}
             </ol>
           </section>
 
-          <section className="mt-14 sm:mt-20" aria-labelledby="peeks-heading">
-            <h2 id="peeks-heading" className="text-[15px] font-medium tracking-[-0.02em]">
+          <section className="mt-20 md:mt-[120px]" aria-labelledby="peeks-heading">
+            <h2 id="peeks-heading" className="section-title">
               One run. Four places to look.
             </h2>
             <div
-              className="hairline mt-5 overflow-hidden rounded-[12px] bg-paper"
+              className="hairline mt-4 overflow-hidden rounded-lg bg-surface"
               aria-label="What’s inside Scout"
             >
-              <div role="tablist" aria-label="Console surfaces" className="flex gap-6 overflow-x-auto border-b-[0.5px] border-[var(--color-hairline)] px-4 sm:px-5">
+              <div role="tablist" aria-label="Console surfaces" className="flex gap-6 overflow-x-auto overflow-y-hidden border-b border-hairline px-4 sm:px-5">
                 {SURFACES.map((item, index) => {
                   const selected = item.id === active;
                   return (
@@ -158,9 +162,9 @@ export default function Home() {
                       tabIndex={selected ? 0 : -1}
                       onClick={() => setActive(item.id)}
                       onKeyDown={(event) => onTabKeyDown(event, index)}
-                      className={`-mb-px shrink-0 border-b-2 py-3 text-[14px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
+                      className={`shrink-0 border-b-2 py-3 text-body-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
                         selected
-                          ? "border-accent text-accent"
+                          ? "border-accent-text text-accent-text"
                           : "border-transparent text-ink-soft hover:text-ink"
                       }`}
                     >
@@ -170,7 +174,7 @@ export default function Home() {
                 })}
               </div>
 
-              <p className="min-h-[2.6rem] px-4 pt-3 text-[14px] leading-snug text-ink sm:px-5" aria-live="polite">
+              <p className="text-body-sm min-h-12 px-4 pt-3 text-ink sm:px-5" aria-live="polite">
                 {surface.job}
               </p>
 
@@ -178,10 +182,10 @@ export default function Home() {
                 id="surface-peek"
                 role="tabpanel"
                 aria-labelledby={`surface-${surface.id}`}
-                className="mt-3 overflow-x-auto border-t-[0.5px] border-[var(--color-hairline)]"
+                className="mt-3 border-t border-hairline"
               >
                 <div className="flex justify-end px-4 pt-2 sm:px-5">
-                  <span className="font-mono text-[10px] text-ink-faint">Sample data</span>
+                  <span className="num text-[12px] leading-4 text-ink-faint">Sample data</span>
                 </div>
                 {active === "radar" && <RadarPeek />}
                 {active === "competitor" && <CompetitorPeek />}
@@ -191,11 +195,11 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="mt-16 max-w-[36rem] sm:mt-24" aria-label="Open Scout">
-            <p className="text-balance text-[18px] font-medium leading-snug tracking-[-0.02em] sm:text-[20px]">
+          <section className="mt-20 max-w-[640px] md:mt-[120px]" aria-label="Open Scout">
+            <p className="card-title text-balance">
               For teams doing research without a research team.
             </p>
-            <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+            <p className="mt-3 text-[15px] leading-6 text-ink-soft">
               Watchtower keeps listening to markets you care about.
             </p>
             <div className="mt-6">
@@ -205,8 +209,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="no-print hairline-t px-5 py-4 sm:px-8">
-        <p className="mx-auto max-w-[960px] text-center font-mono text-[11px] text-ink-soft">
+      <footer className="no-print hairline-t px-6 py-4 md:px-12">
+        <p className="meta mx-auto max-w-[1040px] text-center">
           Scout · 0→1 market research
         </p>
       </footer>
@@ -221,7 +225,7 @@ function OpenScoutLink({ from }: { from: "hero" | "closing" }) {
       onClick={() =>
         track("console_click", from === "hero" ? { from: "hero" } : { from: "closing" })
       }
-      className="inline-flex items-center rounded-[12px] bg-accent px-6 py-3 text-[14px] font-semibold text-white transition-colors duration-200 hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      className="elev-1 inline-flex h-11 items-center rounded-[999px] bg-accent-fill px-6 text-[15px] leading-5 font-semibold text-white transition-[background-color,transform] duration-[120ms] ease-[cubic-bezier(0.2,0,0,1)] hover:bg-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent active:scale-[0.98] active:bg-accent-deep"
     >
       Open Scout
     </a>
@@ -233,19 +237,21 @@ function SourceStrip() {
     <div className="mt-10">
       <ul
         aria-label="Listening across Hacker News, Reddit, YouTube, Web, G2, GitHub, App Store, and Bluesky"
-        className="flex flex-wrap gap-2"
+        className="flex flex-wrap gap-5"
       >
         {SOURCES.map((source) => (
           <li
             key={source.key}
-            className="inline-flex items-center gap-2 rounded-[12px] border-[0.5px] border-[var(--color-hairline)] bg-paper px-3 py-2 text-[13px] text-ink"
+            className="inline-flex items-center gap-2 text-[13px] leading-[18px] text-ink-soft"
           >
-            <PlatformLogo name={source.key} className="size-[18px] shrink-0 text-ink-soft" />
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-sm border border-hairline">
+              <PlatformLogo name={source.key} className="size-[18px] shrink-0 text-ink-soft" />
+            </span>
             {source.label}
           </li>
         ))}
       </ul>
-      <p className="mt-3 font-mono text-[11px] text-ink-soft">8 sources · public market voices</p>
+      <p className="meta mt-3">8 sources · public market voices</p>
     </div>
   );
 }
@@ -261,29 +267,29 @@ function RadarPeek() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:px-5">
-        <span className="text-[12px] font-medium">Since last run</span>
-        <span className="font-mono text-[10px] text-ink-faint">3 runs · 21 Aug</span>
-        <span className="font-mono text-[10px] text-[color:var(--color-pos)]">rising · Scattered research</span>
-        <span className="font-mono text-[10px] text-accent">new · Synthesis before prioritization</span>
-        <span className="font-mono text-[10px] text-[color:var(--color-mid)]">fading · Archive-first workflows</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-5">
+        <span className="text-[12px] leading-4 font-semibold">Since last run</span>
+        <span className="num text-[12px] leading-4 text-ink-faint">3 runs · 21 Aug</span>
+        <span className="num text-[12px] leading-4 text-pos">rising · Scattered research</span>
+        <span className="num text-[12px] leading-4 text-new">new · Synthesis before prioritization</span>
+        <span className="num text-[12px] leading-4 text-mid">fading · Archive-first workflows</span>
       </div>
       <table className="w-full table-fixed border-collapse text-left">
         <thead>
-          <tr className="border-y-[0.5px] border-[var(--color-hairline)] font-mono text-[10px] text-ink-faint">
-            <th className="px-4 py-2 font-normal sm:px-5">Signal</th>
-            <th className="w-12 px-2 py-2 font-normal sm:w-14">Freq</th>
-            <th className="w-12 px-2 py-2 font-normal sm:w-14">Score</th>
-            <th className="w-16 px-2 py-2 font-normal sm:w-28">Trend</th>
+          <tr className="border-y border-hairline-strong text-[12px] leading-4 font-semibold text-ink-faint">
+            <th className="px-4 py-2 font-semibold sm:px-5">Signal</th>
+            <th className="w-12 px-2 py-2 font-semibold sm:w-14">Freq</th>
+            <th className="w-12 px-2 py-2 font-semibold sm:w-14">Score</th>
+            <th className="w-16 px-2 py-2 font-semibold sm:w-28">Trend</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(([signal, freq, score, trend, spark], index) => (
             <Fragment key={signal}>
-              <tr className="border-b-[0.5px] border-[var(--color-hairline)] text-[12.5px]">
+              <tr className="border-b border-hairline text-body-sm">
                 <td className="px-4 py-2.5 sm:px-5">{signal}</td>
-                <td className="px-2 py-2.5 font-mono tabular-nums text-ink-soft">{freq}</td>
-                <td className="px-2 py-2.5 font-mono tabular-nums">{score}</td>
+                <td className="num px-2 py-2.5 text-ink-soft">{freq}</td>
+                <td className="num px-2 py-2.5">{score}</td>
                 <td className="px-2 py-2.5">
                   <span className="inline-flex items-center gap-2">
                     <Trend trend={trend} />
@@ -292,12 +298,12 @@ function RadarPeek() {
                 </td>
               </tr>
               {index === 0 ? (
-                <tr className="border-b-[0.5px] border-[var(--color-hairline)]">
+                <tr className="border-b border-hairline">
                   <td colSpan={4} className="px-4 pt-1 pb-3 sm:px-5">
-                    <p className="text-[13px] italic leading-snug text-ink">
+                    <p className="text-[15px] leading-6 italic text-ink">
                       “I have three docs open and none of them agree on what to do next.”
                     </p>
-                    <p className="mt-1 font-mono text-[11px] text-ink-faint">Reddit · 18 mentions</p>
+                    <p className="num mt-1 text-[12px] leading-4 text-ink-faint">Reddit · 18 mentions</p>
                   </td>
                 </tr>
               ) : null}
@@ -319,43 +325,45 @@ function CompetitorPeek() {
 
   return (
     <div>
-      <p className="px-4 pt-1 pb-2 text-[12px] font-medium sm:px-5">Competitor intel</p>
+      <p className="px-4 pt-1 pb-2 text-[12px] leading-4 font-semibold sm:px-5">Competitor intel</p>
       <div className="sm:hidden">
         {rows.map(([name, pricing, rating, complaint, move, delta]) => (
-          <div key={name} className="border-t-[0.5px] border-[var(--color-hairline)] px-4 py-2.5">
+          <div key={name} className="border-t border-hairline px-4 py-2.5">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="text-[13px] font-medium">{name}</span>
-              <span className="shrink-0 font-mono text-[11px] text-ink-soft">{pricing} · {rating}</span>
+              <span className="text-body-sm font-medium">{name}</span>
+              <span className="num shrink-0 text-[12px] leading-4 text-ink-soft">{pricing} · {rating}</span>
             </div>
-            <p className="mt-1 text-[12.5px] text-[#D9A441]">{complaint}</p>
-            <p className="mt-1 font-mono text-[10px] text-ink-faint">{move} · {delta} · receipt · forum</p>
+            <p className="text-body-sm mt-1 text-mid">{complaint}</p>
+            <p className="num mt-1 text-[12px] leading-4 text-ink-faint">{move} · {delta} · receipt · forum</p>
           </div>
         ))}
       </div>
-      <table className="hidden w-full border-collapse text-left sm:table">
-        <thead>
-          <tr className="border-y-[0.5px] border-[var(--color-hairline)] font-mono text-[10px] text-ink-faint">
-            {["Competitor", "Pricing", "Rating", "Top complaint", "Latest move", "Δ"].map((heading) => (
-              <th key={heading} className="px-3 py-2 font-normal first:pl-4 first:sm:pl-5">{heading}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([name, pricing, rating, complaint, move, delta]) => (
-            <tr key={name} className="border-b-[0.5px] border-[var(--color-hairline)] align-top text-[12.5px]">
-              <td className="py-2.5 pr-3 pl-4 font-medium sm:pl-5">{name}</td>
-              <td className="px-3 py-2.5 font-mono text-[11px]">{pricing}</td>
-              <td className="px-3 py-2.5 font-mono tabular-nums">{rating}</td>
-              <td className="px-3 py-2.5 text-[#D9A441]">
-                {complaint}
-                <span className="mt-0.5 block font-mono text-[10px] text-ink-faint">receipt · forum</span>
-              </td>
-              <td className="px-3 py-2.5 text-ink-soft">{move}</td>
-              <td className="px-3 py-2.5 font-mono text-[10px] text-[color:var(--color-mid)]">{delta}</td>
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full min-w-[720px] border-collapse text-left">
+          <thead>
+            <tr className="border-y border-hairline-strong text-[12px] leading-4 font-semibold text-ink-faint">
+              {["Competitor", "Pricing", "Rating", "Top complaint", "Latest move", "Δ"].map((heading) => (
+                <th key={heading} className="px-3 py-2 font-semibold first:pl-4 first:sm:pl-5">{heading}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map(([name, pricing, rating, complaint, move, delta]) => (
+              <tr key={name} className="border-b border-hairline align-top text-body-sm">
+                <td className="py-2.5 pr-3 pl-4 font-medium sm:pl-5">{name}</td>
+                <td className="num px-3 py-2.5 text-[12px] leading-4">{pricing}</td>
+                <td className="num px-3 py-2.5">{rating}</td>
+                <td className="px-3 py-2.5 text-mid">
+                  {complaint}
+                  <span className="num mt-1 block text-[12px] leading-4 text-ink-faint">receipt · forum</span>
+                </td>
+                <td className="px-3 py-2.5 text-ink-soft">{move}</td>
+                <td className="num px-3 py-2.5 text-[12px] leading-4 text-mid">{delta}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -371,26 +379,26 @@ function InterviewsPeek() {
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 pt-1 pb-2 sm:px-5">
-        <span className="font-mono text-[22px] leading-none tabular-nums text-accent">82%</span>
-        <span className="text-[12.5px] text-ink-soft">resolved · 12 web-resolvable · 4 only a human can close</span>
+        <span className="type-stat text-accent-text">82%</span>
+        <span className="meta">resolved · 12 web-resolvable · 4 only a human can close</span>
       </div>
       <ol>
         {rows.map(([id, question, flag, closes]) => (
-          <li key={id} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-2 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-1.5 sm:px-5">
-            <span className="font-mono text-[12px] text-accent">{id}</span>
+          <li key={id} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-2 border-t border-hairline px-4 py-2 sm:px-5">
+            <span className="num self-start text-[13px] leading-[18px] text-accent-text">{id}</span>
             <div>
-              <p className="text-[13px] leading-snug">{question}</p>
-              <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
+              <p className="text-body-sm">{question}</p>
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-4">
                 {flag ? (
                   <>
-                    <span className="rounded-full border-[0.5px] border-[#D9A441] px-1.5 py-px font-mono text-[#D9A441]">Mom-Test flagged</span>
-                    <span className="text-[11px] text-ink-soft">{flag}</span>
+                    <span className="inline-flex h-6 items-center rounded-[999px] bg-[#FBF3E2] px-2 text-[12px] leading-4 font-semibold text-[#85601B]">Mom-Test flagged</span>
+                    <span className="text-[13px] leading-[18px] text-ink-soft">{flag}</span>
                   </>
                 ) : (
-                  <span className="font-mono text-ink-faint">Mom-Test clean</span>
+                  <span className="num text-ink-faint">Mom-Test clean</span>
                 )}
-                <span className="font-mono text-accent">{closes}</span>
-                <span className="font-mono text-ink-faint">receipt · Reddit</span>
+                <span className="num text-accent-text">{closes}</span>
+                <span className="num text-ink-faint">receipt · Reddit</span>
               </p>
             </div>
           </li>
@@ -411,14 +419,14 @@ function RoadmapPeek() {
   return (
     <ol>
       {rows.map(([rank, title, rationale, confidence, closes]) => (
-        <li key={rank} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] gap-3 border-t-[0.5px] border-[var(--color-hairline)] px-4 py-3 sm:px-5">
-          <span className="font-mono text-[12px] text-accent">{rank}</span>
+        <li key={rank} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] gap-3 border-t border-hairline px-4 py-3 sm:px-5">
+          <span className="num self-start text-[13px] leading-[18px] text-accent-text">{rank}</span>
           <div>
-            <p className="text-[13px] font-medium leading-snug">{title}</p>
-            <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">{rationale}</p>
-            <p className="mt-1 font-mono text-[10px] text-ink-faint">{closes} · receipt on file</p>
+            <p className="text-body-sm font-medium">{title}</p>
+            <p className="text-body-sm mt-1 text-ink-soft">{rationale}</p>
+            <p className="num mt-1 text-[12px] leading-4 text-ink-faint">{closes} · receipt on file</p>
           </div>
-          <span className="font-mono text-[16px] tabular-nums text-[color:var(--color-pos)]">{confidence}</span>
+          <span className="num text-[13px] leading-[18px] text-pos">{confidence}</span>
         </li>
       ))}
     </ol>
@@ -428,13 +436,13 @@ function RoadmapPeek() {
 function Trend({ trend }: { trend: string }) {
   const color =
     trend === "rising"
-      ? "text-[color:var(--color-pos)]"
+      ? "text-pos"
       : trend === "fading"
-        ? "text-[color:var(--color-mid)]"
+        ? "text-mid"
         : trend === "new"
-          ? "text-accent"
-          : "text-ink-soft";
-  return <span className={`font-mono text-[10px] ${color}`}>{trend}</span>;
+          ? "text-new"
+          : "text-ink-muted";
+  return <span className={`num text-[12px] leading-4 ${color}`}>{trend}</span>;
 }
 
 function Spark({ series }: { series: string }) {

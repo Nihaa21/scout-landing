@@ -54,7 +54,7 @@ export default function GalaxyBackground() {
       className="no-print pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
     >
       <svg
-        className="drift absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2"
+        className="absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2 opacity-50"
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid slice"
       >
@@ -103,19 +103,17 @@ export default function GalaxyBackground() {
           stroke="var(--color-accent)"
           strokeWidth="1.2"
           opacity="0.5"
-          className="radar-ring"
-          style={{ transformBox: "fill-box", transformOrigin: "center" }}
         />
         <circle cx="196" cy="168" r="3.5" fill="var(--color-accent)" opacity="0.35" />
 
         {/* magnifier — research / dig deeper */}
-        <g stroke="var(--color-ink)" fill="none" strokeWidth="1.4" opacity="0.08" className="floaty">
+        <g stroke="var(--color-ink)" fill="none" strokeWidth="1.4" opacity="0.08">
           <circle cx="1024" cy="238" r="21" />
           <line x1="1040" y1="254" x2="1058" y2="272" strokeLinecap="round" />
         </g>
 
         {/* voice-of-customer speech bubbles */}
-        <g stroke="var(--color-ink)" fill="none" strokeWidth="1.1" opacity="0.07" className="floaty">
+        <g stroke="var(--color-ink)" fill="none" strokeWidth="1.1" opacity="0.07">
           <rect x="252" y="612" width="78" height="48" rx="13" />
           <path d="M270 660 l0 14 l15 -14" />
           <line x1="268" y1="630" x2="314" y2="630" />

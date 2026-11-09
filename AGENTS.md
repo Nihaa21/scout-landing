@@ -22,4 +22,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Never change the cron schedules or paths without the owner; the backend
   throttles refreshes to once per 20 h per market, so more frequent crons only
   burn API credits.
+- **Design:** same system as the console (`VISUAL-SYSTEM-v2.md`). Terracotta ramp (`#E0703A` / text `#AE4F22` / button `#BF5527`), Inter + JetBrains Mono (not Geist), 1px hairlines `rgba(30,27,24,.10)`, radii 8/12/18, no infinite background motion, and a global `prefers-reduced-motion` block in `globals.css`. Checks before push: `npm run build` (no pytest here).
 - Onboarding for new agents: `GROK_HANDOFF.md` in the backend repo.

@@ -1,30 +1,39 @@
 @import "tailwindcss";
 
-/* ── Scout design tokens — LIGHT instrument ──────────────────────────
-   Warm paper, near-black ink, ONE muted electric-blue accent, hairlines.
-   A faint wire/constellation web sits behind everything (GalaxyBackground). */
+/* Scout design tokens — VISUAL-SYSTEM-v2 §8.2.
+   Warm paper, one terracotta ramp, 1px hairlines, radii 8/12/18 + pill. */
 @theme {
-  --color-paper: #fbfaf6;
+  --color-paper: #f9f8f6;
   --color-surface: #ffffff;
-  --color-ink: #1a1916;
-  --color-ink-soft: #57544d;
-  --color-ink-faint: #9b968c;
-  --color-hairline: rgba(26, 25, 22, 0.24);
-  --color-accent: #1f6fbf;
-  --color-accent-deep: #185fa5;
-  --color-accent-bright: #378add;
-  --color-pos: #2f8a52;
-  --color-mid: #b5851f;
-  --color-neg: #c0483b;
+  --color-sunken: #f3f1ee;
+  --color-ink: #1a2233;
+  --color-ink-soft: #3d4656;
+  --color-ink-muted: #5e6673;
+  --color-ink-faint: #6c737f;
+  --color-hairline: rgba(30, 27, 24, 0.1);
+  --color-hairline-strong: rgba(30, 27, 24, 0.16);
+  --color-accent: #e0703a;
+  --color-accent-fill: #bf5527;
+  --color-accent-text: #ae4f22;
+  --color-accent-deep: #963f18;
+  --color-accent-soft: #fcebe0;
+  --color-accent-wash: #fef6f1;
+  --color-pos: #227f74;
+  --color-mid: #946b1e;
+  --color-neg: #c0392b;
+  --color-new: #2463b0;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
   --font-serif: Georgia, "Times New Roman", serif;
 
-  --radius-card: 12px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
 }
 
-/* shadcn/ui variable bridge */
+/* shadcn/ui variable bridge. §8.2 values, plus the aliases this repo already reads. */
 :root {
   --background: var(--color-paper);
   --foreground: var(--color-ink);
@@ -32,19 +41,21 @@
   --card-foreground: var(--color-ink);
   --popover: var(--color-surface);
   --popover-foreground: var(--color-ink);
-  --primary: var(--color-accent);
+  --primary: var(--color-accent-fill);
   --primary-foreground: #ffffff;
-  --secondary: var(--color-surface);
-  --secondary-foreground: var(--color-ink);
-  --muted: var(--color-surface);
-  --muted-foreground: var(--color-ink-soft);
-  --accent: var(--color-surface);
-  --accent-foreground: var(--color-ink);
+  --secondary: var(--color-sunken);
+  --secondary-foreground: var(--color-ink-soft);
+  --muted: var(--color-sunken);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-accent-wash);
+  --accent-foreground: var(--color-accent-deep);
   --destructive: var(--color-neg);
   --border: var(--color-hairline);
-  --input: var(--color-hairline);
+  --input: var(--color-hairline-strong);
   --ring: var(--color-accent);
   --radius: 12px;
+  --elevation-1: 0 1px 2px rgba(30, 27, 24, 0.04), 0 4px 12px -4px rgba(30, 27, 24, 0.08);
+  --elevation-2: 0 2px 4px rgba(30, 27, 24, 0.05), 0 12px 32px -8px rgba(30, 27, 24, 0.14);
 }
 
 @theme inline {
@@ -72,201 +83,99 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  letter-spacing: -0.003em;
   font-weight: 400;
+  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
 }
 
-/* Hairlines */
+@utility type-display {
+  font-size: 48px;
+  line-height: 52px;
+  letter-spacing: -0.032em;
+  font-weight: 700;
+  @media (max-width: 640px) {
+    font-size: 36px;
+    line-height: 40px;
+  }
+}
+@utility section-title {
+  font-size: 21px;
+  line-height: 28px;
+  letter-spacing: -0.016em;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+@utility card-title {
+  font-size: 17px;
+  line-height: 24px;
+  letter-spacing: -0.012em;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+@utility text-body-sm {
+  font-size: 14px;
+  line-height: 20px;
+}
+@utility meta {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--color-ink-muted);
+}
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+@utility type-stat {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* Hairlines — 1px. The 0.5px / .24 alpha border is retired. */
 .hairline {
-  border: 0.5px solid var(--color-hairline);
+  border: 1px solid var(--color-hairline);
 }
 .hairline-b {
-  border-bottom: 0.5px solid var(--color-hairline);
+  border-bottom: 1px solid var(--color-hairline);
 }
 .hairline-t {
-  border-top: 0.5px solid var(--color-hairline);
+  border-top: 1px solid var(--color-hairline);
 }
 .hairline-l {
-  border-left: 0.5px solid var(--color-hairline);
+  border-left: 1px solid var(--color-hairline);
 }
 
-/* ── Depth system — soft, warm, low-contrast elevation ──────────────────
-   The old look was dead flat. These give surfaces a quiet lift off the paper
-   (warm-tinted shadows, never grey/harsh) so the UI reads crafted, not busy. */
+/* Elevation ladder. Lists do not lift. */
 .elev-1 {
-  box-shadow:
-    0 1px 2px rgba(26, 25, 22, 0.04),
-    0 4px 14px -8px rgba(26, 25, 22, 0.1);
+  box-shadow: var(--elevation-1);
 }
 .elev-2 {
-  box-shadow:
-    0 1px 2px rgba(26, 25, 22, 0.05),
-    0 10px 30px -12px rgba(26, 25, 22, 0.14);
+  box-shadow: var(--elevation-2);
 }
 .elev-float {
-  box-shadow:
-    0 2px 4px rgba(26, 25, 22, 0.04),
-    0 30px 70px -28px rgba(26, 25, 22, 0.16),
-    0 8px 24px -16px rgba(26, 25, 22, 0.08);
-}
-/* hover: lift a touch, warm the shadow toward the accent */
-.elev-hover {
-  transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.elev-hover:hover {
-  box-shadow:
-    0 2px 6px rgba(26, 25, 22, 0.06),
-    0 18px 40px -16px rgba(31, 111, 191, 0.22);
-}
-
-/* Scouting status — slow breathe */
-@keyframes breathe {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-.breathe {
-  animation: breathe 1.6s ease-in-out infinite;
-}
-
-/* Scanning line for the theater's active platform row */
-@keyframes scan {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
-.scanline {
-  animation: scan 1.4s ease-in-out infinite;
-}
-
-/* Typewriter caret */
-@keyframes caret {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}
-.caret {
-  animation: caret 0.9s step-end infinite;
-}
-
-/* Live indicator — a hard blink plus an expanding ping ring */
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-.blink {
-  animation: blink 1s steps(1, end) infinite;
-}
-@keyframes ping-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.55;
-  }
-  75%,
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-.ping-ring {
-  animation: ping-ring 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Signals hero — continuously pulsing audio-visualizer bars */
-@keyframes waveform {
-  0%,
-  100% {
-    transform: scaleY(0.42);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-.wave-bar {
-  transform-origin: center;
-  animation: waveform 1.5s ease-in-out infinite;
-}
-
-/* Theater active row — soft accent glow that breathes */
-@keyframes rowGlow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(31, 111, 191, 0);
-    background-color: rgba(31, 111, 191, 0.03);
-  }
-  50% {
-    box-shadow: 0 0 22px -6px rgba(31, 111, 191, 0.35);
-    background-color: rgba(31, 111, 191, 0.07);
-  }
-}
-.row-glow {
-  animation: rowGlow 2s ease-in-out infinite;
-}
-
-/* Background — radar scan pulse for the VoC/Scout motifs */
-@keyframes radar {
-  0% {
-    transform: scale(0.4);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.9);
-    opacity: 0;
-  }
-}
-.radar-ring {
-  transform-origin: center;
-  animation: radar 5s ease-out infinite;
-}
-@keyframes floaty {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-9px);
-  }
-}
-.floaty {
-  animation: floaty 9s ease-in-out infinite;
-}
-
-/* Very slow drift for the background web */
-@keyframes drift {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(-14px, -10px, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-}
-.drift {
-  animation: drift 34s ease-in-out infinite;
+  box-shadow: var(--elevation-2);
 }
 
 ::selection {
-  background: rgba(31, 111, 191, 0.18);
+  background: #f8d5bf;
   color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Print / Download-as-PDF: isolate the brief, expand every section ── */

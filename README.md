@@ -1,47 +1,31 @@
 # scout — landing site
 
-Editorial, single-page landing for the Scout research agent. Warm paper, ink
-text, one muted blue accent, hairline borders — a research instrument, not a
-marketing site.
-
-**Status: local preview only.** Not wired to git, GitHub, or Vercel yet.
+Public landing for the Scout research agent, plus the Vercel crons in
+`vercel.json`. Design follows the same system as the console. See the Design
+bullet in `AGENTS.md` and `VISUAL-SYSTEM-v2.md`: terracotta ramp (`#E0703A` /
+text `#AE4F22` / button `#BF5527`), Inter + JetBrains Mono, 1px hairlines,
+radii 8/12/18.
 
 ## Run
 
 ```bash
 npm install
 npm run dev        # → http://localhost:3000
+npm run build      # must pass before pushing
 ```
 
 ## What's on the page
 
-1. Mono wordmark — `scout / 0→1 product research`
-2. Hero — headline, one-line subhead, product input + **Run Scout**
-3. **The live brief** (centerpiece) — header (`product · live · N signals`),
-   sources that light up sequentially on a run, "the one thing" insight,
-   theme cards (sentiment dot · mentions · serif quote · `gap → ask` reveal),
-   and a hairline competitive-teardown table
-4. Footer
+1. Wordmark — `Scout`
+2. Eyebrow — `0→1 market research`
+3. Hero — the 0→1 headline, sub, **Open Scout**, and the paste hint
+4. Source strip — eight public sources, in locked order
+5. How it works — three steps
+6. One run. Four places to look — Radar, Competitor, Interviews, Roadmap
+7. Closing lines, second Open Scout, and the footer
 
-"Run Scout" replays the source-lighting animation and re-populates the brief.
-
-## Data
-
-Everything renders from `lib/brief.ts` (`MOCK_BRIEF` — language taken from real
-Scout runs on "Jobber"). The API seam is `fetchBrief()` in the same file: when
-the backend is live, replace the mock return with
-
-```ts
-const res = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/research?product=...`
-);
-return res.json();
-```
-
-Nothing outside that function needs to change. `NEXT_PUBLIC_API_URL` is the one
-reserved env var.
+Open Scout goes to the canonical console. The page copy lives in `app/page.tsx`.
 
 ## Stack
 
-Next.js (app router) · Tailwind v4 · Geist / Geist Mono via `next/font`
-(serif quotes use the system Georgia stack).
+Next.js (app router) · Tailwind v4 · Inter / JetBrains Mono via `next/font`
